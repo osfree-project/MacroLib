@@ -1,4 +1,4 @@
-     Copyright (C) 2002-2021 osFree
+     Copyright (C) 2002-2022 osFree
 
      All rights reserved.
 

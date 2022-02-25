@@ -1,15 +1,10 @@
 ;/*!
 ;   @file
 ;
-;   @ingroup fapi
-;
 ;   @brief BIOS Macro Library
 ;
 ;   (c) osFree Project 2018-2022, <http://www.osFree.org>
 ;   for licence see licence.txt in root directory, or project website
-;
-;   This is Family API implementation for DOS, used with BIND tools
-;   to link required API
 ;
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
 ;
@@ -19,123 +14,123 @@
 ;
 ;*/
 
-@vid		macro	func
-		mov     ah,func
-		int	10h
-		endm
-
-@SetMode	macro	mode
-		mov     al,mode
-		@vid	0h
-		endm
-
-@GetMode	macro
-		@vid	15
-		endm
-
-@SetCurSz	MACRO	first,last
-		mov	ch,first
-		mov	cl,last
-		@vid	01h
+@vid		MACRO	FUNC
+		MOV	AH,FUNC
+		INT	10H
 		ENDM
 
-@SetCurPos	MACRO	column,row,page
-		mov	dl,column
-		mov	dh,row
-		mov	bh,page
-		@vid	02h
+@SetMode	MACRO	MODE
+		MOV	AL,MODE
+		@VID	0H
 		ENDM
 
-@GetCur		MACRO	page
-		mov	bh,page
-		@vid	03h
+@GetMode	MACRO
+		@VID	15
 		ENDM
 
-@SetPage	MACRO	page
-		mov	al,page
-		@vid	05h
+@SetCurSz	MACRO	FIRST,LAST
+		MOV	CH,FIRST
+		MOV	CL,LAST
+		@VID	01H
 		ENDM
 
-@ScrollUp	MACRO	distance,atrib,upcol,uprow,downcol,downrow
-		mov	cl,upcol
-		mov	ch,uprow
-		mov	dl,downcol
-		mov	dh,downrow
-		mov	bh,atrib
-		mov	al,distance
-		@vid	06h
+@SetCurPos	MACRO	COLUMN,ROW,PAGE
+		MOV	DL,COLUMN
+		MOV	DH,ROW
+		MOV	BH,PAGE
+		@VID	02H
 		ENDM
 
-@ScrollDn	MACRO	distance,atrib,upcol,uprow,downcol,downrow
-		mov	cl,upcol
-		mov	ch,uprow
-		mov	dl,downcol
-		mov	dh,downrow
-		mov	bh,atrib
-		mov	al,distance
-		@vid	07h
+@GetCur		MACRO	PAGE
+		MOV	BH,PAGE
+		@VID	03H
 		ENDM
 
-@GetChAtr	MACRO	page
-		mov	bh,page
-		@vid	08h
+@SetPage	MACRO	PAGE
+		MOV	AL,PAGE
+		@VID	05H
 		ENDM
 
-@PutChAtr	MACRO	char,atrib,page,repeat
-		mov	al,char
-		mov	bl,atrib
-		mov	bh,page
-		mov	cx,repeat
-		@vid	09h
+@ScrollUp	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+		MOV	CL,UPCOL
+		MOV	CH,UPROW
+		MOV	DL,DOWNCOL
+		MOV	DH,DOWNROW
+		MOV	BH,ATRIB
+		MOV	AL,DISTANCE
+		@VID	06H
 		ENDM
 
-@PutCh		MACRO	char,atrib,page,repeat
-		mov	al,char
-		mov	bl,atrib
-		mov	bh,page
-		mov	cx,repeat
-		@vid	0Ah
+@ScrollDn	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+		MOV	CL,UPCOL
+		MOV	CH,UPROW
+		MOV	DL,DOWNCOL
+		MOV	DH,DOWNROW
+		MOV	BH,ATRIB
+		MOV	AL,DISTANCE
+		@VID	07H
 		ENDM
 
-@SetPalet	MACRO	color
-		mov	bh,1
-		mov	bl,color
-		@vid	0Bh
+@GetChAtr	MACRO	PAGE
+		MOV	BH,PAGE
+		@VID	08H
 		ENDM
 
-@SetColor	MACRO	color
-		sub	bh,bh
-		mov	bl,color
-		@vid	0Bh
+@PutChAtr	MACRO	CHAR,ATRIB,PAGE,REPEAT
+		MOV	AL,CHAR
+		MOV	BL,ATRIB
+		MOV	BH,PAGE
+		MOV	CX,REPEAT
+		@VID	09H
 		ENDM
 
-@SetDot		MACRO	color, Row, Col
-		mov	dx, Row
-		mov	cx, Col
-		mov	al,color
-		@vid	0Ch
+@PutCh		MACRO	CHAR,ATRIB,PAGE,REPEAT
+		MOV	AL,CHAR
+		MOV	BL,ATRIB
+		MOV	BH,PAGE
+		MOV	CX,REPEAT
+		@VID	0AH
 		ENDM
 
-@GetDot		MACRO	color, Row
-		mov	dx, Row
-		mov	cx, Col
-		@vid	0dh
+@SetPalet	MACRO	COLOR
+		MOV	BH,1
+		MOV	BL,COLOR
+		@VID	0BH
 		ENDM
 
-@WrtTTY		Macro	Char
-		mov	al, char
-		@vid	0eH
-		EndM
+@SetColor	MACRO	COLOR
+		SUB	BH,BH
+		MOV	BL,COLOR
+		@VID	0BH
+		ENDM
 
-@VideoState	Macro
-		@vid	0fh
-		EndM
+@SetDot		MACRO	COLOR, ROW, COL
+		MOV	DX, ROW
+		MOV	CX, COL
+		MOV	AL,COLOR
+		@VID	0CH
+		ENDM
+
+@GetDot		MACRO	COLOR, ROW
+		MOV	DX, ROW
+		MOV	CX, COL
+		@VID	0DH
+		ENDM
+
+@WrtTTY		MACRO	CHAR
+		MOV	AL, CHAR
+		@VID	0EH
+		ENDM
+
+@VideoState	MACRO
+		@VID	0FH
+		ENDM
 
 
-COM			MACRO	FUNC
-			MOV	AH, FUNC
-			INT	14H
-			ENDM
+COM		MACRO	FUNC
+		MOV	AH, FUNC
+		INT	14H
+		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
@@ -269,142 +264,142 @@ COM_RECIEVE_CHAR	MACRO	PORT
 ;
 ;-----------------------------------------------------------------------------
 
-COM_STATUS		MACRO	PORT
-			MOV	DX, PORT
-			COM	03H
-			ENDM
+COM_STATUS	MACRO	PORT
+		MOV	DX, PORT
+		COM	03H
+		ENDM
 
 @Prn		MACRO	FUNC
 		MOV	AH, FUNC
 		INT	17H
 		ENDM
 
-@PrnPrint	Macro	Pr, Char
-		Mov	Al, Char
-		Mov	Dx, Pr
-		@Prn	0
-		EndM
+@PrnPrint	MACRO	PR, CHAR
+		MOV	AL, CHAR
+		MOV	DX, PR
+		@PRN	0
+		ENDM
 
-@PrnInit	Macro	Pr
-		Mov	Dx, Pr
-		@Prn	1
-		EndM
+@PrnInit	MACRO	PR
+		MOV	DX, PR
+		@PRN	1
+		ENDM
 
-@PrnStatus	Macro	Pr
-		Mov	Dx, Pr
-		@Prn	2
-		EndM
+@PrnStatus	MACRO	PR
+		MOV	DX, PR
+		@PRN	2
+		ENDM
 
 @Kbd		MACRO	FUNC
 		MOV	AH, FUNC
 		INT	16H
 		ENDM
 
-@KbdCharIn	Macro
-		@Kbd	0
-		EndM
+@KbdCharIn	MACRO
+		@KBD	0
+		ENDM
 
-@KbdPeek	Macro
-		@Kbd	1
-		EndM
+@KbdPeek	MACRO
+		@KBD	1
+		ENDM
 
-@KbdStatus	Macro
-		@Kbd	2
-		EndM
+@KbdStatus	MACRO
+		@KBD	2
+		ENDM
 
 @Dsk		MACRO	FUNC
 		MOV	AH, FUNC
 		INT	13H
 		ENDM
 
-@DskReset	Macro
-		@Dsk	0
-		EndM
+@DskReset	MACRO
+		@DSK	0
+		ENDM
 
-@DskStatus	Macro
-		@Dsk	1
-		EndM
+@DskStatus	MACRO
+		@DSK	1
+		ENDM
 
-@DskRead	Macro	Disk, Head, Track, Sector, Sects, Buf
-		Mov	Dl, Disk
-		Mov	Dh, Head
-		Mov	Ch, Track
-		Mov	Cl, Sector
-		Mov	Al, Sects
-		Les	Bx, Buf
-		@Dsk	2
-		EndM
+@DskRead	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS, BUF
+		MOV	DL, DISK
+		MOV	DH, HEAD
+		MOV	CH, TRACK
+		MOV	CL, SECTOR
+		MOV	AL, SECTS
+		LES	BX, BUF
+		@DSK	2
+		ENDM
 
-@DskWrite	Macro	Disk, Head, Track, Sector, Sects, Buf
-		Mov	Dl, Disk
-		Mov	Dh, Head
-		Mov	Ch, Track
-		Mov	Cl, Sector
-		Mov	Al, Sects
-		Les	Bx, Buf
-		@Dsk	3
-		EndM
+@DskWrite	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS, BUF
+		MOV	DL, DISK
+		MOV	DH, HEAD
+		MOV	CH, TRACK
+		MOV	CL, SECTOR
+		MOV	AL, SECTS
+		LES	BX, BUF
+		@DSK	3
+		ENDM
 
-@DskVerify	Macro	Disk, Head, Track, Sector, Sects
-		Mov	Dl, Disk
-		Mov	Dh, Head
-		Mov	Ch, Track
-		Mov	Cl, Sector
-		Mov	Al, Sects
-		@Dsk	4
-		EndM
+@DskVerify	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS
+		MOV	DL, DISK
+		MOV	DH, HEAD
+		MOV	CH, TRACK
+		MOV	CL, SECTOR
+		MOV	AL, SECTS
+		@DSK	4
+		ENDM
 
-@DskFormat	Macro	Disk, Head, Track, Buf
-		Mov	Dl, Disk
-		Mov	Dh, Head
-		Mov	Ch, Track
-		Les	Bx, Buf
-		@Dsk	2
-		EndM
+@DskFormat	MACRO	DISK, HEAD, TRACK, BUF
+		MOV	DL, DISK
+		MOV	DH, HEAD
+		MOV	CH, TRACK
+		LES	BX, BUF
+		@DSK	2
+		ENDM
 
-@MemSize	Macro
-		Int	12H
-		EndM
+@MemSize	MACRO
+		INT	12H
+		ENDM
 
-@Equipment	Macro
-		Int	11h
-		EndM
+@Equipment	MACRO
+		INT	11H
+		ENDM
 
 
-@Tape	Macro	func
-	Mov	ah, func
-	Int	15h
-	EndM
+@Tape		MACRO	FUNC
+		MOV	AH, FUNC
+		INT	15H
+		ENDM
 
-@TapeOn		Macro
-		@Tape	0h
-		EndM
+@TapeOn		MACRO
+		@TAPE	0H
+		ENDM
 
-@TapeOff	Macro
-		@Tape	1h
-		EndM
+@TapeOff	MACRO
+		@TAPE	1H
+		ENDM
 
-@TapeRead	Macro Buf, Len
-		Les	Bx, Buf
-		Mov	Cx, Len
-		@Tape	02h
-		EndM
+@TapeRead	MACRO BUF, LEN
+		LES	BX, BUF
+		MOV	CX, LEN
+		@TAPE	02H
+		ENDM
 
-@TapeWrite	Macro Buf, Len
-		Les	Bx, Buf
-		Mov	Cx, Len
-		@Tape	03h
-		EndM
+@TapeWrite	MACRO BUF, LEN
+		LES	BX, BUF
+		MOV	CX, LEN
+		@TAPE	03H
+		ENDM
 
-@GetTime	Macro
-		Mov	Ah, 0h
-		Int	1ah
-		EndM
+@GetTime	MACRO
+		MOV	AH, 0H
+		INT	1AH
+		ENDM
 
-@SetTime	Macro	Count
-		Mov	CX, HighWord Count
-		Mov	DX, LowWord Count
-		Mov	Ah, 1h
-		Int	1ah
-		EndM
+@SetTime	MACRO	COUNT
+		MOV	CX, HIGHWORD COUNT
+		MOV	DX, LOWWORD COUNT
+		MOV	AH, 1H
+		INT	1AH
+		ENDM
 
