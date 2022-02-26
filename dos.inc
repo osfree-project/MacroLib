@@ -1,19 +1,19 @@
 ;/*!
 ;   @file
 ;
-;   @ingroup fapi
-;
-;   @brief Family API implementation
+;   @brief DOS Macro Library
 ;
 ;   (c) osFree Project 2018-2022, <http://www.osFree.org>
 ;   for licence see licence.txt in root directory, or project website
 ;
-;   This is Family API implementation for DOS, used with BIND tools
-;   to link required API
-;
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
 ;
+;   This library based on IBM 5150 Technical Reference #6322507 of Apr 1984.
+;   Functions, found in later BIOSes not covered. Macro names mostly constructed
+;   from MASM 5.x documentation.
+;
 ;*/
+
 
 .8086
 
