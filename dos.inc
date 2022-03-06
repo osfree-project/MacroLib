@@ -8,1449 +8,1186 @@
 ;
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
 ;
-;   This library based on IBM 5150 Technical Reference #6322507 of Apr 1984.
-;   Functions, found in later BIOSes not covered. Macro names mostly constructed
-;   from MASM 5.x documentation.
+;   This library based mostly on MASM 5.x and MASM 6.x documentation.
 ;
 ;*/
 
 
 .8086
 
-terminate  macro
-           int 20H
-           endm
-
-abs_disk_read  macro  disk,buffer,num_sectors,first_sector
-                    mov    al,disk
-                    mov    bx,offset buffer
-                    mov    cx,num_sectors
-                    mov    dx,first_sector
-                    int    25H
-                    popf
-                    endm
-
-abs_disk_write  macro  disk,buffer,num_sectors,first_sector
-                    mov    al,disk
-                    mov    bx,offset buffer
-                    mov    cx,num_sectors
-                    mov    dx,first_sector
-                    int    26H
-                    popf
-                    endm
-
-
-flush macro handle
-		mov bx, handle
-		mov ah,68h
-		int 21h
-		endm
-
-read_kbd_and_echo  macro
-                        mov  ah, 01H
-                        int  21H
-                        endm
-
-display_char macro   character
-                mov     dl,character
-                mov     ah,02H
-                int     21H
-                endm
-
-aux_input  macro
-                mov  ah,03H
-                int  21H
-                endm
-
-aux_output  macro  character
-                mov  dl,character
-                mov  ah,04H
-                int  21H
-                endm
-
-
-dir_console_io  macro switch
-                    mov  dl,switch
-                    mov  ah,06H
-                    int  21H
-                    endm
-
-dir_console_input  macro
-                        mov  ah,07H
-                        int  21H
-                        endm
-
-read_kbd  macro
-            mov   ah,08H
-            int   21H
-            endm
-
-get_string  macro  limit,string
-                mov    dx,offset string
-                mov    string,limit
-                mov    ah,0AH
-                int    21H
-                endm
-
-check_kbd_status  macro
-                    mov   ah,0BH
-                    int   21H
-                    endm
-
-open  macro fcb
-        mov   dx,offset fcb
-        mov   ah,0FH
-        int   21H
-        endm
-
-close  macro fcb
-            mov   dx,offset fcb
-            mov   ah,10H
-            int   21H
-            endm
-
-search_first  macro fcb
-                mov   dx,offset fcb
-                mov   ah,11H
-                int   21H
-                endm
-
-search_next  macro fcb
-                mov   dx,offset fcb
-                mov   ah,12H
-                int   21H
-                endm
-
-delete  macro  fcb
-            mov    dx,offset fcb
-            mov    ah,13H
-            int    21H
-            endm
-
-read_seq  macro fcb
-            mov   dx,offset fcb
-            mov   ah,14H
-            int   21H
-            endm
-
-write_seq  macro fcb
-                mov   dx,offset fcb
-                mov   ah,15H
-                int   21H
-                endm
-
-create  macro fcb
-            mov   dx,offset fcb
-            mov   ah,16H
-            int   21H
-            endm
-
-set_dta  macro  buffer
-            mov    dx,offset buffer
-            mov    ah,1AH
-            int    21H
-            endm
-
-def_drive_data  macro
-                    push   ds
-                    mov    ah,1BH
-                    int    21H
-                    mov    al,byte ptr[bx]
-                    pop    ds
-                    endm
-
-drive_data  macro  drive
-                push   ds
-                mov    dl,drive
-                mov    ah,1BH
-                int    21H
-                mov    al, byte ptr[bx]
-                pop    ds
-                endm
-
-read_ran  macro  fcb
-            mov    dx,offset fcb
-            mov    ah,21H
-            int    21H
-            endm
-
-write_ran  macro  fcb
-                mov    dx,offset fcb
-                mov    ah,22H
-                int    21H
-                endm
-
-file_size  macro  fcb
-                mov    dx,offset fcb
-                mov    ah,23H
-                int    21H
-                endm
-
-set_relative_record  macro  fcb
-                        mov    dx,offset fcb
-                        mov    ah,24H
-                        int    21H
-                        endm
-
-set_vector  macro  interrupt,handler_start
-                mov    al,interrupt
-                mov    dx,offset handler_start
-                mov    ah,25H
-                endm
-
-create_psp  macro  seg_addr
-                mov    dx,seg_addr
-                mov    ah,26H
-                endm
-
-ran_block_read  macro  fcb,count,rec_size
-                    mov    dx,offset fcb
-                    mov    cx,count
-                    mov    word ptr fcb[14],rec_size
-                    mov    ah,27H
-                    int    21H
-                    endm
-
-ran_block_write  macro  fcb,count,rec_size
-                    mov    dx,offset fcb
-                    mov    cx,count
-                    mov    word ptr fcb[14],rec_size
-                    mov    ah,28H
-                    int    21H
-                    endm
-
-parse macro string,fcb
-        mov   si,offset string
-        mov   di,offset fcb
-        push  es
-        push  ds
-        pop   es
-        mov   al,0FH        ; bits 0-3 on
-        mov   ah,29H
-        int   21H
-        pop   es
-        endm
-
-get_dta  macro
-            mov    ah,2fH
-            int    21H
-            endm
-
-
-keep_process  macro return_code,last_byte
-                mov   al,return_code
-                mov   dx,offset last_byte
-                mov   cl,4
-                shr   dx,cl
-                inc   dx
-                mov   ah,31H
-                int   21H
-                endm
-
-ctrl_c_ck  macro  action,state
-                mov    al,action
-                mov    dl,state
-                mov    ah,33H
-                int    21H
-                endm
-
-get_vector  macro  interrupt
-                mov    al,interrupt
-                mov    ah,35H
-                int    21H
-                endm
-
-get_disk_space  macro  drive
-                    mov    dl,drive
-                    mov    ah,36H
-                    int    21H
-                    endm
-
-get_country macro  country,buffer
-                local     gc_01
-                mov       dx,offset buffer
-                mov       ax,country
-                cmp       ax,OFFH
-                jl        gc_01
-                mov       al,OFFh
-                mov       bx,country
-    gc_01:      mov       ah,38h
-                int       21H
-                endm
-
-set_country macro  country
-                local  sc_01
-                mov    dx,0FFFFH
-                mov    ax,country
-                cmp    ax,0FFH
-                jl     sc_01
-                mov    bx,country
-                mov    al,0ffh
-    sc_01:      mov    ah,38H
-                int    21H
-                endm
-
-
-read_handle  macro  handle,buffer,bytes
-                mov    bx,handle
-                mov    dx,offset buffer
-                mov    cx,bytes
-                mov    ah,3FH
-                int    21H
-                endm
-
-ioctl_data macro  code,handle
-                mov    bx,handle
-                mov    al,code
-                mov    ah,44H
-                int    21H
-                endm
-
-ioctl_char  macro  code,handle,buffer
-                mov    bx,handle
-                mov    dx,offset buffer
-                mov    al,code
-                mov    ah,44H
-                int    21H
-                endm
-
-ioctl_block macro  code,drive,buffer
-                mov    bl,drive
-                mov    dx,offset buffer
-                mov    al,code
-                mov    ah,44H
-                int    21H
-                endm
-
-ioctl_status  macro  code,handle
-                mov    bx,handle
-                mov    al,code
-                mov    ah,44H
-                int    21H
-                endm
-
-ioctl_change  macro  drive
-                mov    bl, drive
-                mov    al, 08H
-                mov    ah, 44H
-                int    21H
-                endm
-
-ioctl_rblock  macro  drive
-                mov    bl, drive
-                mov    al, 09H
-                mov    ah, 44H
-                int    21H
-                endm
-
-ioctl_rhandle macro  handle
-                mov    bx, handle
-                mov    al, 0AH
-                mov    ah, 44H
-                int    21H
-                endm
-
-ioctl_retry  macro  retries, wait
-                mov    dx, retries
-                mov    cx, wait
-                mov    al, 0BH
-                mov    ah, 44H
-                int    21H
-                endm
-
-ioctl_handles        macro handle,function,category,buffer
-                    mov ch,05H
-                    mov cl,function
-                    mov dx,offset buffer
-                    mov bx,handle
-                    mov ah,44H
-                    mov al,0CH
-                    int 21H
-                    endm
-
-
-set_block  macro   last_byte
-                mov     bx,offset last_byte
-                mov     cl,4
-                shr     bx,cl
-                add     bx,17
-                mov     ah,4AH
-                int     21H
-                mov     ax,bx
-                shl     ax,cl
-                dec     ax
-                mov     sp,ax
-                mov     bp,sp
-                endm
-
-exec  macro  path,command,parms
-        mov    dx,offset path
-        mov    bx,offset parms
-        mov    word ptr parms[02H],offset command
-        mov    word ptr parms[04H],cs
-        mov    word ptr parms[06H],5CH
-        mov    word ptr parms[08H],es
-        mov    word ptr parms[0AH],6CH
-        mov    word ptr parms[0CH],es
-        mov    al,0
-        mov    ah,4BH
-        int    21H
-        endm
-
-exec_ovl  macro  path,parms,seg_addr
-            mov    dx,offset path
-            mov    bx,offset parms
-            mov    parms,seg_addr
-            mov    parms[02H],seg_addr
-            mov    al,3
-            mov    ah,4BH
-            int    21H
-            endm
-
-find_first_file  macro  path,attrib
-                    mov    dx,offset path
-                    mov    cx,attrib
-                    mov    ah,4EH
-                    int    21H
-                    endm
-
-find_next_file  macro
-                    mov    ah,4FH
-                    int    21H
-                    endm
-
-alloc_strat macro  code,strategy
-                mov    bx,strategy
-                mov    al,code
-                mov    ah,58H
-                int    21H
-                endm
-
-create_temp macro  pathname,attrib
-                mov    cx,attrib
-                mov    dx,offset pathname
-                mov    ah,5AH
-                int    21H
-                endm
-
-create_new macro  pathname,attrib
-                mov    cx, attrib
-                mov    dx, offset pathname
-                mov    ah, 5BH
-                int    21H
-                endm
-
-file_unlock  macro  handle,start,bytes
-            mov    bx, handle
-            mov    cx, word ptr start
-            mov    dx, word ptr start+2
-            mov    si, word ptr bytes
-            mov    di, word ptr bytes+2
-            mov    al, 1
-            mov    ah, 5CH
-            int    21H
-            endm
-
-get_machine_name  macro  buffer
-                    mov    dx,offset buffer
-                    mov    al,0
-                    mov    ah,5EH
-                    int    21H
-                    endm
-
-printer_setup  macro  index,lgth,string
-                    mov    bx, index
-                    mov    cx, lgth
-                    mov    dx, offset string
-                    mov    al, 2
-                    mov    ah, 5EH
-                    int    21H
-                    endm
-
-get_list  macro  index,local,remote
-            mov    bx, index
-            mov    si, offset local
-            mov    di, offset remote
-            mov    al,2
-            mov    ah, 5FH
-            int    21H
-            endm
-
-redir macro  device,value,source,destination
-        mov    bl, device
-        mov    cx, value
-        mov    si, offset source
-        mov    es, seg destination
-        mov    di, offset destination
-        mov    al, 03H
-        mov    ah, 5FH
-        int    21H
-        endm
-
-cancel_redir  macro  local
-                mov    si, offset local
-                mov    al, 4
-                mov    ah, 5FH
-                int    21H
-                endm
-
-
-;  Macro Definitions for MS-DOS System Call Examples
-;
-; *******************
-;  Interrupts
-; *******************
-;                                 Interrupt 25H
-    ABS_DISK_READ  macro  disk,buffer,num_sectors,first_sector
-        mov    al,disk
-        mov    bx,offset buffer
-        mov    cx,num_sectors
-        mov    dx,first_sector
-        int    25H
-        popf
-        endm
-    ;                                 Interrupt 26H
-    ABS_DISK_WRITE  macro  disk,buffer,num_sectors,first_sector
-        mov    al,disk
-        mov    bx,offset buffer
-        mov    cx,num_sectors
-        mov    dx,first_sector
-        int    26H
-        popf
-        endm
-    ;                                 Interrupt 27H
-
-    STAY_RESIDENT  macro  last_instruc
-        mov    dx,offset last_instruc
-        inc    dx
-        int    27H
-        endm
-    ;
-    ;
-    ; *******************
-    ;  Function Requests
-    ; *******************
-    ;                                 Function Request 00H
-    TERMINATE_PROGRAM  macro
-        xor    ah,ah
-        int    21H
-        endm
-    ;                                 Function Request 01H
-    READ_KBD_AND_ECHO  macro
-        mov    ah,01H
-        int    21H
-        endm
-    ;                                 Function Request 02H
-    DISPLAY_CHAR  macro  character
-        mov    dl,character
-        mov    ah,02H
-        int    21H
-        endm
-    ;                                 Function Request 03H
-    AUX_INPUT    macro
-        mov     ah,03H
-        int     21H
-        endm
-    ;                                 Function Request 04H
-    AUX_OUTPUT  macro
-        mov    ah,04H
-        int    21H
-        endm
-
-;                                 Function Request 05H
-PRINT_CHAR  macro  character
-        mov    dl,character
-        mov    ah,05H
-        int    21H
-        endm
-    ;                                 Function Request 06H
-    DIR_CONSOLE_IO  macro  switch
-        mov    dl,switch
-        mov    ah,06H
-        int    21H
-        endm
-    ;                                 Function Request 07H
-    DIR_CONSOLE_INPUT  macro
-        mov    ah,07H
-        int    21H
-        endm
-    ;                                 Function Request 08H
-    READ_KBD  macro
-        mov    ah,08H
-        int    21H
-        endm
-    ;                                 Function Request 09H
-    DISPLAY  macro  string
-        mov    dx,offset string
-        mov    ah,09H
-        int    21H
-        endm
-    ;                                 Function Request 0AH
-    GET_STRING  macro  limit,string
-        mov    dx,offset string
-        mov    string,limit
-        mov    ah,0AH
-        int    21H
-        endm
-    ;                                 Function Request 0BH
-    CHECK_KBD_STATUS  macro
-        mov    ah,0BH
-        int    21H
-        endm
-;                                 Function Request 0CH
-FLUSH_AND_READ_KBD  macro  switch
-        mov    al,switch
-        mov    ah,0CH
-        int    21H
-        endm
-
-;                                 Function Request 0DH
-RESET_DISK  macro
-        mov    ah,0DH
-        int    21H
-        endm
-
-LFN_RESET_DISK macro disk
-	MOV	AX, 710dH
-	MOV	CX, 2
-	MOV	DX, disk
-	int	21h
-	endm
-;                                 Function Request 0EH
-SELECT_DISK  macro  disk
-        mov    dl,disk
-	SUB	DL, 65		; 'A'
-        mov    ah,0EH
-        int    21H
-        endm
-
-    ;                                 Function Request 0FH
-    OPEN  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,0FH
-        int    21H
-        endm
-    ;                                 Function Request 10H
-    CLOSE  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,10H
-        int    21H
-        endm
-    ;                                 Function Request 11H
-    SEARCH_FIRST  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,11H
-        int    21H
-        endm
-    ;                                 Function Request 12H
-    SEARCH_NEXT  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,12H
-        int    21H
-        endm
-    ;                                 Function Request 13H
-    DELETE  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,13H
-        int    21H
-        endm
-    ;                                 Function Request 14H
-    READ_SEQ  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,14H
-        int    21H
-        endm
-    ;                                 Function Request 15H
-    WRITE_SEQ  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,15H
-        int    21H
-        endm
-    ;                                 Function Request 16H
-    CREATE  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,16H
-        int    21H
-        endm
-    ;                                 Function Request 17H
-    RENAME  macro  fcb,newname
-        mov    dx,offset fcb
-        mov    ah,17H
-        int    21H
-        endm
-
-;                                 Function Request 19H
-CURRENT_DISK  macro
-        mov    ah,19H
-        int    21H
-        endm
-
-    ;                                 Function Request 1AH
-    SET_DTA  macro  buffer
-        mov    dx,offset buffer
-        mov    ah,1AH
-        endm
-    ;                                 Function Request 1BH
-    DEF_DRIVE_DATA  macro
-        mov    ah,1BH
-        int    21H
-        endm
-    ;                                 Function Request 1CH
-    DRIVE_DATA  macro  drive
-        mov    dl,drive
-        mov    ah,1CH
-        int    21H
-        endm
-    ;                                 Function Request 21H
-    READ_RAN  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,21H
-        int    21H
-        endm
-    ;                                 Function Request 22H
-    WRITE_RAN  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,22H
-        int    21H
-        endm
-    ;                                 Function Request 23H
-    FILE_SIZE  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,23H
-        int    21H
-        endm
-    ;                                 Function Request 24H
-    SET_RELATIVE_RECORD  macro  fcb
-        mov    dx,offset fcb
-        mov    ah,24H
-        int    21H
-        endm
-    ;                                 Function Request 25H
-    SET_VECTOR  macro  interrupt,handler_start
-        mov    al,interrupt
-        mov    dx,offset handler_start
-        mov    ah,25H
-        int    21H
-        endm
-    ;                                 Function Request 26H
-    CREATE_PSP  macro  seg_addr
-        mov    dx,offset seg_addr
-        mov    ah,26H
-        int    21H
-        endm
-    ;                                  Function Request 27H
-    RAN_BLOCK_READ  macro  fcb,count,rec_size
-        mov    dx,offset fcb
-        mov    cx,count
-        mov    word ptr fcb[14],rec_size
-        mov    ah,27H
-        int    21H
-        endm
-    ;                                  Function Request 28H
-    RAN_BLOCK_WRITE  macro  fcb,count,rec_size
-        mov    dx,offset fcb
-        mov    cx,count
-        mov    word ptr fcb[14],rec_size
-        mov    ah,28H
-        int    21H
-        endm
-    ;                                 Function Request 29H
-    PARSE  macro  string,fcb
-        mov    si,offset string
-        mov    di,offset fcb
-        push   es
-        push   ds
-        pop    es
-        mov    al,0FH
-        mov    ah,29H
-        int    21H
-        pop    es
-        endm
-
-;                                  Function Request 2AH
-GET_DATE  macro
-        mov    ah,2AH
-        int    21H
-        endm
-
-;                                  Function Request 2BH
-SET_DATE  macro  year,month,day
-        mov    cx,year
-        mov    dh,month
-        mov    dl,day
-        mov    ah,2BH
-        int    21H
-        endm
-
-;                                  Function Request 2CH
-GET_TIME  macro
-        mov    ah,2CH
-        int    21H
-        endm
-
-;                                  Function Request 2DH
-SET_TIME  macro  hour,minutes,seconds,hundredths
-        mov    ch,hour
-        mov    cl,minutes
-        mov    dh,seconds
-        mov    dl,hundredths
-        mov    ah,2DH
-        int    21H
-        endm
-
-;                                  Function Request 2EH
-VERIFY  macro  switch
-        mov    al,switch
-        mov    ah,2EH
-        int    21H
-        endm
-
-    ;                                  Function Request 2FH
-    GET_DTA  macro
-        mov    ah,2FH
-        int    21H
-        endm
-
-;                                  Function Request 30H
-GET_VERSION  macro
-        mov    ax,3000H			; AL=0 for DOS 5+ compatibility
-        int    21H
-        endm
-
-    ;                                  Function Request 31H
-    KEEP_PROCESS  macro  return_code,last_byte
-        mov    al,return_code
-        mov    dx,offset last_byte
-        mov    cl,4
-        shr    dx,cl
-        inc    dx
-        mov    ah,31H
-        int    21H
-        endm
-    ;                                  Function Request 33H
-    CTRL_C_CK  macro  action,state
-        mov    al,action
-        mov    dl,state
-        mov    ah,33H
-        int    21H
-        endm
-    ;                                  Function Request 35H
-    GET_VECTOR  macro  interrupt
-        mov    al,interrupt
-        mov    ah,35H
-        int    21H
-        endm
-    ;                                  Function Request 36H
-    GET_DISK_SPACE  macro  drive
-        mov    dl,drive
-        mov    ah,36H
-        int    21H
-        endm
-
-;                                  Function Request 38H
-GET_COUNTRY  macro  country,buffer
-                local  gc_01
-                mov    dx,offset buffer
-                mov    ax,country
-                cmp    ax,0FFH
-                jl     gc_01
-                mov    al,0ffh
-                mov    bx,country
-    gc_01:       mov    ah,38H
-                int    21H
-                endm
-;                                  Function Request 66H
-GET_UPPERCASE_TABLE	macro country, codepage, buffer, buflen
-		MOV	bx, codepage
+TERMINATE	MACRO
+		INT	20H
+		ENDM
+
+FLUSH		MACRO	HANDLE
+		MOV	BX, HANDLE
+		MOV	AH,68H
+		INT	21H
+		ENDM
+
+FILE_UNLOCK	MACRO	HANDLE,START,BYTES
+		MOV	BX, HANDLE
+		MOV	CX, WORD PTR START
+		MOV	DX, WORD PTR START+2
+		MOV	SI, WORD PTR BYTES
+		MOV	DI, WORD PTR BYTES+2
+		MOV	AL, 1
+		MOV	AH, 5CH
+		INT	21H
+		ENDM
+
+ABS_DISK_READ	MACRO	DISK,BUFFER,NUM_SECTORS,FIRST_SECTOR
+		MOV	AL,DISK
+		MOV	BX,OFFSET BUFFER
+		MOV	CX,NUM_SECTORS
+		MOV	DX,FIRST_SECTOR
+		INT	25H
+		POPF
+		ENDM
+
+ABS_DISK_WRITE	MACRO	DISK,BUFFER,NUM_SECTORS,FIRST_SECTOR
+		MOV	AL,DISK
+		MOV	BX,OFFSET BUFFER
+		MOV	CX,NUM_SECTORS
+		MOV	DX,FIRST_SECTOR
+		INT	26H
+		POPF
+		ENDM
+
+
+STAY_RESIDENT	MACRO	LAST_INSTRUC
+		MOV	DX,OFFSET LAST_INSTRUC
+		INC	DX
+		INT	27H
+		ENDM
+
+TERMINATE_PROGRAM	MACRO
+		XOR	AH,AH
+		INT	21H
+		ENDM
+
+READ_KBD_AND_ECHO	MACRO
+		MOV	AH,01H
+		INT	21H
+		ENDM
+
+DISPLAY_CHAR	MACRO	CHARACTER
+		MOV	DL,CHARACTER
+		MOV	AH,02H
+		INT	21H
+		ENDM
+
+@DispCh		MACRO	CHARACTER: VARARG
+		MOV	AH, 02H
+		FOR	ARG, <CHARACTER>
+		MOV	DL, ARG
+		INT	21H
+		ENDM
+		ENDM
+
+AUX_INPUT	MACRO
+		MOV	AH,03H
+		INT	21H
+		ENDM
+
+AUX_OUTPUT	MACRO
+		MOV	AH,04H
+		INT	21H
+		ENDM
+
+PRINT_CHAR	MACRO	CHARACTER
+		MOV	DL,CHARACTER
+		MOV	AH,05H
+		INT	21H
+		ENDM
+
+@PrtCh	MACRO	CHARACTER: VARARG
+		MOV	AH, 05H
+		FOR	ARG, <CHARACTER>
+		MOV	DL, ARG
+		INT	21H
+		ENDM
+		ENDM
+
+DIR_CONSOLE_IO	MACRO	SWITCH
+		MOV	DL,SWITCH
+		MOV	AH,06H
+		INT	21H
+		ENDM
+
+DIR_CONSOLE_INPUT	MACRO
+		MOV	AH,07H
+		INT	21H
+		ENDM
+
+READ_KBD	MACRO
+		MOV	AH,08H
+		INT	21H
+		ENDM
+
+DISPLAY		MACRO	STRING
+		MOV	DX,OFFSET STRING
+		MOV	AH,09H
+		INT	21H
+		ENDM
+
+@DispStr	MACRO OFSET, SEGMNT
+		MOV	DX,OFFSET OFSET
+		IFNB	<SEGMNT>
+		MOV	AX, <SEGMNT>
+		MOV	DS, AX
+		ENDIF
+		MOV	AH,09H
+		INT	21H
+		ENDM
+
+GET_STRING	MACRO	LIMIT,STRING
+		MOV	DX,OFFSET STRING
+		MOV	STRING,LIMIT
+		MOV	AH,0AH
+		INT	21H
+		ENDM
+
+@GetStr		MACRO	OFSET, TERMINATOR, LIMIT, SEGMNT
+		IFNB	<SEGMNT>
+		MOV	AX, <SEGMNT>
+		MOV	DS, AX
+		ENDIF
+		MOV	DX,OFFSET <OFSET>
+		MOV	SI, DX
+		IFNB	<LIMIT>
+		MOV	STRING,LIMIT
+		ENDIF
+		MOV	AH,0AH
+		INT	21H
+		INC	SI
+		MOV	BL, [SI]
+		SUB	BH, BH
+		INC	SI
+		IFNB	TERMINATOR
+		MOV	[BX+SI], TERMINATOR
+		ENDIF
+		ENDM
+
+CHECK_KBD_STATUS	MACRO
+		MOV	AH,0BH
+		INT	21H
+		ENDM
+
+FLUSH_AND_READ_KBD	MACRO	SWITCH
+		MOV	AL,SWITCH
+		MOV	AH,0CH
+		INT	21H
+		ENDM
+
+RESET_DISK	MACRO
+		MOV	AH,0DH
+		INT	21H
+		ENDM
+
+LFN_RESET_DISK	MACRO	DISK
+		MOV	AX, 710DH
+		MOV	CX, 2
+		MOV	DX, DISK
+		INT	21H
+		ENDM
+
+
+SELECT_DISK	MACRO	DISK
+		MOV	DL,DISK
+		SUB	DL, 65		; 'A'
+		MOV	AH,0EH
+		INT	21H
+		ENDM
+
+@SetDrv		MACRO	DRIVE
+		MOV	DL,DRIVE
+		MOV	AH,0EH
+		INT	21H
+		ENDM
+
+OPEN		MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,0FH
+		INT	21H
+		ENDM
+
+CLOSE		MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,10H
+		INT	21H
+		ENDM
+
+SEARCH_FIRST	MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,11H
+		INT	21H
+		ENDM
+
+SEARCH_NEXT	MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,12H
+		INT	21H
+		ENDM
+
+DELETE		MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,13H
+		INT	21H
+		ENDM
+
+READ_SEQ	MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,14H
+		INT	21H
+		ENDM
+
+WRITE_SEQ	MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,15H
+		INT	21H
+		ENDM
+
+CREATE		MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,16H
+		INT	21H
+		ENDM
+
+RENAME		MACRO	FCB,NEWNAME
+		MOV	DX,OFFSET FCB
+		MOV	AH,17H
+		INT	21H
+		ENDM
+
+CURRENT_DISK	MACRO
+		MOV	AH,19H
+		INT	21H
+		ENDM
+
+@GetDrv		MACRO
+		MOV	AH,19H
+		INT	21H
+		ENDM
+
+SET_DTA		MACRO	BUFFER
+		MOV	DX,OFFSET BUFFER
+		MOV	AH,1AH
+		ENDM
+
+@SetDTA		MACRO BUFFER, SEGMNT
+		IFNB <SEGMNT>
+		MOV AX, SEGMNT
+		MOV DS, AX
+		ENDIF
+		MOV	DX,OFFSET BUFFER
+		MOV	AH,1AH
+		ENDM
+
+DEF_DRIVE_DATA	MACRO
+		MOV	AH,1BH
+		INT	21H
+		ENDM
+
+DRIVE_DATA	MACRO	DRIVE
+		MOV	DL,DRIVE
+		MOV	AH,1CH
+		INT	21H
+		ENDM
+
+READ_RAN	MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,21H
+		INT	21H
+		ENDM
+
+WRITE_RAN	MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,22H
+		INT	21H
+		ENDM
+
+FILE_SIZE	MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,23H
+		INT	21H
+		ENDM
+
+SET_RELATIVE_RECORD	MACRO	FCB
+		MOV	DX,OFFSET FCB
+		MOV	AH,24H
+		INT	21H
+		ENDM
+
+SET_VECTOR	MACRO	INTERRUPT,HANDLER_START
+		MOV	AL,INTERRUPT
+		MOV	DX,OFFSET HANDLER_START
+		MOV	AH,25H
+		INT	21H
+		ENDM
+
+@SetInt		MACRO	INTERRUPT, VECTOR, SEGMNT
+		IFNB	<SEGMNT>
+		MOV	AX, <SEGMNT>
+		MOV	DS, AX
+		ENDIF
+		MOV	AL,INTERRUPT
+		MOV	DX,OFFSET VECTOR
+		MOV	AH,25H
+		INT	21H
+		ENDM
+
+CREATE_PSP	MACRO	SEG_ADDR
+		MOV	DX,OFFSET SEG_ADDR
+		MOV	AH,26H
+		INT	21H
+		ENDM
+
+RAN_BLOCK_READ	MACRO	FCB,COUNT,REC_SIZE
+		MOV	DX,OFFSET FCB
+		MOV	CX,COUNT
+		MOV	WORD PTR FCB[14],REC_SIZE
+		MOV	AH,27H
+		INT	21H
+		ENDM
+
+RAN_BLOCK_WRITE	MACRO	FCB,COUNT,REC_SIZE
+		MOV	DX,OFFSET FCB
+		MOV	CX,COUNT
+		MOV	WORD PTR FCB[14],REC_SIZE
+		MOV	AH,28H
+		INT	21H
+		ENDM
+
+PARSE		MACRO	STRING,FCB
+		MOV	SI,OFFSET STRING
+		MOV	DI,OFFSET FCB
+		PUSH	ES
+		PUSH	DS
+		POP	ES
+		MOV	AL,0FH
+		MOV	AH,29H
+		INT	21H
+		POP	ES
+		ENDM
+
+GET_DATE	MACRO
+		MOV	AH,2AH
+		INT	21H
+		ENDM
+
+@GetDate	MACRO
+		MOV	AH,2AH
+		INT	21H
+		ENDM
+
+SET_DATE	MACRO	YEAR,MONTH,DAY
+		MOV	CX,YEAR
+		MOV	DH,MONTH
+		MOV	DL,DAY
+		MOV	AH,2BH
+		INT	21H
+		ENDM
+
+@SetDate	MACRO MONTH, DAY, YEAR
+		MOV	CX,YEAR
+		MOV	DH,MONTH
+		MOV	DL,DAY
+		MOV	AH,2BH
+		INT	21H
+		ENDM
+
+GET_TIME	MACRO
+		MOV	AH,2CH
+		INT	21H
+		ENDM
+
+@GetTime	MACRO
+		MOV	AH,2CH
+		INT	21H
+		ENDM
+
+SET_TIME	MACRO	HOUR,MINUTES,SECONDS,HUNDREDTHS
+		MOV	CH,HOUR
+		MOV	CL,MINUTES
+		MOV	DH,SECONDS
+		MOV	DL,HUNDREDTHS
+		MOV	AH,2DH
+		INT	21H
+		ENDM
+
+@SetTime	MACRO	HOUR, MINUTES, SECONDS, HUNDREDTHS
+		MOV	CH,HOUR
+		MOV	CL,MINUTES
+		MOV	DH,SECONDS
+		MOV	DL,HUNDREDTHS
+		MOV	AH,2DH
+		INT	21H
+		ENDM
+
+VERIFY		MACRO	SWITCH
+		MOV	AL,SWITCH
+		MOV	AH,2EH
+		INT	21H
+		ENDM
+
+GET_DTA		MACRO
+		MOV	AH,2FH
+		INT	21H
+		ENDM
+
+@GetDTA		MACRO
+		MOV	AH,2FH
+		INT	21H
+		ENDM
+
+GET_VERSION	MACRO
+		MOV	AX,3000H			; AL=0 FOR DOS 5+ COMPATIBILITY
+		INT	21H
+		ENDM
+
+@GetVer		MACRO
+		MOV	AX,3000H			; AL=0 FOR DOS 5+ COMPATIBILITY
+		INT	21H
+		ENDM
+
+KEEP_PROCESS	MACRO	RETURN_CODE,LAST_BYTE
+		MOV	AL,RETURN_CODE
+		MOV	DX,OFFSET LAST_BYTE
+		MOV	CL,4
+		SHR	DX,CL
+		INC	DX
+		MOV	AH,31H
+		INT	21H
+		ENDM
+
+@TSR		MACRO	PARAGRAPHS, RETURN
+		MOV	AL,RETURN
+		MOV	DX,PARAGRAPHS
+		MOV	AH,31H
+		INT	21H
+		ENDM
+
+CTRL_C_CK	MACRO	ACTION,STATE
+		MOV	AL,ACTION
+		MOV	DL,STATE
+		MOV	AH,33H
+		INT	21H
+		ENDM
+
+GET_VECTOR	MACRO	INTERRUPT
+		MOV	AL,INTERRUPT
+		MOV	AH,35H
+		INT	21H
+		ENDM
+
+@GetInt		MACRO	INTERRUPT
+		MOV	AL,INTERRUPT
+		MOV	AH,35H
+		INT	21H
+		ENDM
+
+GET_DISK_SPACE	MACRO	DRIVE
+		MOV	DL,DRIVE
+		MOV	AH,36H
+		INT	21H
+		ENDM
+
+@ChkDrv		MACRO	DRIVE
+		MOV	DL,DRIVE
+		MOV	AH,36H
+		INT	21H
+		ENDM
+
+
+GET_COUNTRY	MACRO	COUNTRY,BUFFER
+		LOCAL	GC_01
+		MOV	DX,OFFSET BUFFER
+		MOV	AX,COUNTRY
+		CMP	AX,0FFH
+		JL	GC_01
+		MOV	AL,0FFH
+		MOV	BX,COUNTRY
+GC_01:		MOV	AH,38H
+		INT	21H
+		ENDM
+
+GET_UPPERCASE_TABLE	MACRO COUNTRY, CODEPAGE, BUFFER, BUFLEN
+		MOV	BX, CODEPAGE
 		MOV	DX, COUNTRY
-		MOV	CX, buflen
-		LES	DI, buffer
+		MOV	CX, BUFLEN
+		LES	DI, BUFFER
 		MOV	AX, 6602H
 		INT	21H
-		endm
-;                                  Function Request 38H
-    SET_COUNTRY  macro  country
-                local  sc_01
-                mov    dx,0FFFFH
-                mov    ax,country
-                cmp    ax,0FFH
-                jl     sc_01
-                mov    al,0ffh
-                mov    bx,country
-    sc_01:       mov    ah,38H
-                int    21H
-                endm
+		ENDM
 
-;                                  Function Request 39H
-MAKE_DIR  macro  path
-        lds    dx, path
-        mov    ah,39H
-        int    21H
-        endm
+SET_COUNTRY	MACRO	COUNTRY
+		LOCAL	SC_01
+		MOV	DX,0FFFFH
+		MOV	AX,COUNTRY
+		CMP	AX,0FFH
+		JL	SC_01
+		MOV	AL,0FFH
+		MOV	BX,COUNTRY
+SC_01:		MOV	AH,38H
+		INT	21H
+		ENDM
 
-;                                  Function Request 7139H
-LFN_MAKE_DIR  macro  path
-        lds    dx, path
-        mov    ax,7139H
-        int    21H
-        endm
+MAKE_DIR	MACRO	PATH
+		LDS	DX, PATH
+		MOV	AH,39H
+		INT	21H
+		ENDM
 
-;                                  Function Request 3AH
-REM_DIR  macro  path
-        lds    dx, path
-        mov    ah,3AH
-        int    21H
-        endm
+@MkDir		MACRO	PATH, SEGMNT
+		LDS	DX, PATH
+		IFNB	<SEGMNT>
+		MOV	AX, <SEGMNT>
+		MOV	DS, AX
+		ENDIF
+		MOV	AH,39H
+		INT	21H
+		ENDM
 
-;                                  Function Request 713AH
-LFN_REM_DIR  macro  path
-        lds    dx, path
-        mov    ax, 713AH
-        int    21H
-        endm
+LFN_MAKE_DIR	MACRO	PATH
+		LDS	DX, PATH
+		MOV	AX,7139H
+		INT	21H
+		ENDM
 
-;                                  Function Request 3BH
-CHANGE_DIR  macro  path
-        lds    dx, path
-        mov    ah,3BH
-        int    21H
-        endm
+REM_DIR		MACRO	PATH
+		LDS	DX, PATH
+		MOV	AH,3AH
+		INT	21H
+		ENDM
 
-;                                  Function Request 713BH
-LFN_CHANGE_DIR  macro  path
-        lds    dx, path
-        mov    ax,713BH
-        int    21H
-        endm
+@RmDir		MACRO	PATH, SEGMNT
+		LDS	DX, PATH
+		IFNB	<SEGMNT>
+		MOV	AX, <SEGMNT>
+		MOV	DS, AX
+		ENDIF
+		MOV	AH,3AH
+		INT	21H
+		ENDM
 
-;                                  Function Request 3CH
-CREATE_HANDLE  macro  path,attrib
-        lds    dx,path
-        mov    cx,attrib
-        mov    ah,3CH
-        int    21H
-        endm
+LFN_REM_DIR	MACRO	PATH
+		LDS	DX, PATH
+		MOV	AX, 713AH
+		INT	21H
+		ENDM
 
-;                                  Function Request 3DH
-OPEN_HANDLE  macro  path,access
-        lds    dx,path
-        mov    al,access
-        mov     ah,3DH
-        int    21H
-        endm
-;                                  Function Request 3EH
-CLOSE_HANDLE  macro  handle
-        mov    bx,handle
-        mov    ah,3EH
-        int    21H
-        endm
+CHANGE_DIR	MACRO	PATH
+		LDS	DX, PATH
+		MOV	AH,3BH
+		INT	21H
+		ENDM
 
-    ;                                  Function Request 3FH
-    READ_HANDLE  macro  handle,buffer,bytes
-        mov    bx,handle
-        mov    dx,offset buffer
-        mov    cx,bytes
-        mov    ah,3FH
-        int    21H
-        endm
+@ChDir		MACRO	PATH, SEGMNT
+		LDS	DX, PATH
+		IFNB	<SEGMNT>
+		MOV	AX, <SEGMNT>
+		MOV	DS, AX
+		ENDIF
+		MOV	AH,3BH
+		INT	21H
+		ENDM
 
-;                                  Function Request 40H
-WRITE_HANDLE  macro  handle,buffer,bytes
-        mov    bx,handle
-        lds    dx,buffer
-        mov    cx,bytes
-        mov    ah,40H
-        int    21H
-        endm
+LFN_CHANGE_DIR	MACRO	PATH
+		LDS	DX, PATH
+		MOV	AX,713BH
+		INT	21H
+		ENDM
 
-;                                  Function Request 41H
-DELETE_ENTRY  macro  path
-        lds    dx, path
-        mov    ah,41H
-        int    21H
-        endm
-;                                  Function Request 7141H
-LFN_DELETE_ENTRY  macro  path
-        lds    dx, path
-        mov    ax,7141H
-        int    21H
-        endm
+CREATE_HANDLE	MACRO	PATH,ATTRIB
+		LDS	DX,PATH
+		MOV	CX,ATTRIB
+		MOV	AH,3CH
+		INT	21H
+		ENDM
 
-;                                  Function Request 42H
-MOVE_PTR  macro  handle,high,low,method
-        mov    bx,handle
-        mov    cx,high
-        mov    dx,low
-        mov    al,method
-        mov    ah,42H
-        int    21H
-        endm
+OPEN_HANDLE	MACRO	PATH,ACCESS
+		LDS	DX,PATH
+		MOV	AL,ACCESS
+		MOV	AH,3DH
+		INT	21H
+		ENDM
 
-;                                  Function Request 43H
-CHANGE_MODE  macro  path,action,attrib
-        lds    dx,path
-        mov    al,action
-        mov    cx,attrib
-        mov    ah,43H
-        int    21H
-        endm
-;                                  Function Request 7143H
-LFN_CHANGE_MODE  macro  path,action,attrib
-        lds    dx,path
-        mov    bl,action
-        mov    cx,attrib
-        mov    ax,7143H
-        int    21H
-        endm
+CLOSE_HANDLE	MACRO	HANDLE
+		MOV	BX,HANDLE
+		MOV	AH,3EH
+		INT	21H
+		ENDM
 
-;                                  Function Request 4400H,01H
-IOCTL_DATA  macro  code,handle
-        mov    bx,handle
-        mov    al,code
-        mov    ah,44H
-        int    21H
-        endm
+@ClosFil	MACRO	HANDLE
+		MOV	BX,HANDLE
+		MOV	AH,3EH
+		INT	21H
+		ENDM
 
-    ;                                  Function Request 4402H,03H
+READ_HANDLE	MACRO	HANDLE,BUFFER,BYTES
+		MOV	BX,HANDLE
+		MOV	DX,OFFSET BUFFER
+		MOV	CX,BYTES
+		MOV	AH,3FH
+		INT	21H
+		ENDM
 
-    IOCTL_CHAR  macro  code,handle,buffer
-        mov    bx,handle
-        mov    dx,offset buffer
-        mov    al,code
-        mov    ah,44H
-        int    21H
-        endm
-    ;                                  Function Request 4404H,05H
-    IOCTL_STATUS  macro  code,drive,buffer
-        mov    bl,drive
-        mov    dx,offset buffer
-        mov    al,code
-        mov    ah,44H
-        int    21H
-        endm
-    ;                                  Function Request 4406H,07H
-    IOCTL_STATUS macro  code,handle
-        mov    bx,handle
-        mov    al,code
-        mov    ah,44H
-        int    21H
-        endm
-    ;                                  Function Request 4408H
-    IOCTL_CHANGE  macro  drive
-        mov    bl,drive
-        mov    al,08H
-        mov    ah,44H
-        int    21H
-        endm
-    ;                                  Function Request 4409H
-    IOCTL_RBLOCK  macro  drive
-        mov    bl,drive
-        mov    al,09H
-        mov    ah,44H
-        int    21H
-        endm
-    ;                                  Function Request 440AH
-    IOCTL_RHANDLE  macro  handle
-        mov    bx,handle
-        mov    al,0AH
-        mov    ah,44H
-        int    21H
-        endm
-    ;                                  Function Request 440BH
-    IOCTL_RETRY  macro  retries,wait
-        mov    dx,retries
-        mov    cx,wait
-        mov    al,0BH
-        mov    ah,44H
-        int    21H
-        endm
-    ;                                  Function Request 440CH
-    GENERIC_IOCTL_HANDLES macro handle,function,category,buffer
-        mov    ch,05H
-        mov    cl,function
-        mov    dx,offset buffer
-        mov    bx,handle
-        mov    ah,44H
-        mov    al,0CH
-        int    21H
-        endm
-    ;                                  Function Request 440DH
-    GENERIC_IOCTL_BLOCK macro drive_num,function,category,parm_blk
-        mov    ch,08H
-        mov    cl,function
-        mov    dx,offset parm_blk - 1
-        mov    bx,drive_num
-        mov    ah,44H
-        mov    al,0DH
-        int    21H
-        endm
-    ;                                  Function Request 440EH
-    IOCTL_GET_DRIVE_MAP macro   logical_drv
-        mov    bx,logical_drv
-        mov    ah,44H
-        mov    al,0EH
-        int    21H
-        endm
-    ;                                  Function Request 440FH
-    IOCTL_SET_DRIVE_MAP macro   logical_drv
-        mov    bx,logical_drv
-        mov    ah,44H
-        mov    al,0FH
-        int    21H
-        endm
+WRITE_HANDLE	MACRO	HANDLE,BUFFER,BYTES
+		MOV	BX,HANDLE
+		LDS	DX,BUFFER
+		MOV	CX,BYTES
+		MOV	AH,40H
+		INT	21H
+		ENDM
 
-;                                  Function Request 45H
-XDUP  macro  handle
-        mov    bx,handle
-        mov    ah,45H
-        int    21H
-        endm
+DELETE_ENTRY	MACRO	PATH
+		LDS	DX, PATH
+		MOV	AH,41H
+		INT	21H
+		ENDM
 
-;                                  Function Request 46H
-XDUP2  macro  handle1,handle2
-        mov    bx,handle1
-        mov    cx,handle2
-        mov    ah,46H
-        int    21H
-        endm
+@DelFil		MACRO	PATH, SEGMNT
+		LDS	DX, PATH
+		IFNB	<SEGMNT>
+		MOV	AX, <SEGMNT>
+		MOV	DS, AX
+		ENDIF
+		MOV	AH,41H
+		INT	21H
+		ENDM
 
-;                                  Function Request 47H
-GET_DIR  macro  drive,buffer
-        mov    dl,drive
-        mov    si,buffer
-        mov    ah,47H
-        int    21H
-        endm
+LFN_DELETE_ENTRY	MACRO	PATH
+		LDS	DX, PATH
+		MOV	AX,7141H
+		INT	21H
+		ENDM
 
-;                                  Function Request 48H
-ALLOCATE_MEMORY  macro  bytes
-        mov    bx,bytes
-        mov    cl,4
-        shr          bx,cl
-        inc    bx
-        mov    ah,48H
-        int    21H
-        endm
+MOVE_PTR	MACRO	HANDLE,HIGH,LOW,METHOD
+		MOV	BX,HANDLE
+		MOV	CX,HIGH
+		MOV	DX,LOW
+		MOV	AL,METHOD
+		MOV	AH,42H
+		INT	21H
+		ENDM
 
-;                                  Function Request 49H
-FREE_MEMORY  macro  seg_addr
-        mov    ax,seg_addr
-        mov    es,ax
-        mov    ah,49H
-        int    21H
-        endm
-    ;                                  Function Request 4AH
-    SET_BLOCK  macro  last_byte
-        mov    bx,offset last_byte
-        mov    cl,4
-        shr    bx,cl
-        add    bx,17
-        mov    ah,4AH
-        int    21H
-        mov     ax,bx
-        shl     ax,cl
-        dec     ax
-        mov     sp,ax
-        mov     bp,sp
-        endm
-    ;                                  Function Request 4B00H
-    EXEC macro  path,command,parms
-        mov    dx,offset path
-        mov    bx,offset parms
-        mov    word ptr parms[02h],offset command
-        mov    word ptr parms[04h],cs
-        mov    word ptr parms[06h],5ch
-        mov    word ptr parms[08h],es
-        mov    word ptr parms[0ah],6ch
-        mov    word ptr parms[0ch],es
-        mov    al,0
-        mov    ah,4BH
-        int    21H
-        endm
-    ;                                  Function Request 4B03H
-    EXEC_OVL  macro  path,parms,seg_addr
-        mov    dx,offset path
-        mov    bx,offset parms
-        mov    parms,seg_addr
-        mov    parms[02H],seg_addr
-        mov    al,3
-        mov    ah,4BH
-        int    21H
-        endm
+@MovePtrAbs	MACRO	HANDLE, DISTANCE
+		MOV	BX,HANDLE
+		MOV	CX,WORD PTR DISTANCE+2
+		MOV	DX,WORD PTR DISTANCE
+		MOV	AX,4200H
+		INT	21H
+		ENDM
 
-;                                  Function Request 4CH
-END_PROCESS  macro  return_code
-                mov    al,return_code
-                mov    ah,4CH
-                int    21H
-                endm
-;                                  Function Request 4DH
-RET_CODE macro
-        mov    ah,4DH
-        int    21H
-        endm
-;                                  Function Request 4EH
-    FIND_FIRST_FILE  macro  path,attrib
-        mov    dx,offset path
-        mov    cx,attrib
-        mov    ah,4EH
-        int    21H
-        endm
-    ;                                  Function Request 4FH
-    FIND_NEXT_FILE  macro
-        mov    ah,4FH
-        int    21H
-        endm
+@MovePtrRel	MACRO	HANDLE, DISTANCE
+		MOV	BX,HANDLE
+		MOV	CX,WORD PTR DISTANCE+2
+		MOV	DX,WORD PTR DISTANCE
+		MOV	AX,4201H
+		INT	21H
+		ENDM
 
-;                                  Function Request 54H
-GET_VERIFY  macro
-        mov    ah,54H
-        int    21H
-        endm
-;                                  Function Request 56H
-RENAME_FILE  macro  old_path,new_path
-        LDS    dx, old_path
-        LES    di, new_path
-        mov    ah,56H
-        int    21H
-        endm
+CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
+		LDS	DX,PATH
+		MOV	AL,ACTION
+		MOV	CX,ATTRIB
+		MOV	AH,43H
+		INT	21H
+		ENDM
 
-;                                  Function Request 7156H
-LFN_RENAME_FILE  macro  old_path,new_path
-        LDS    dx, old_path
-        LES    di, new_path
-        mov    ax,7156H
-        int    21H
-        endm
-;                                  Function Request 57H
-GET_SET_DATE_TIME  macro  handle,action,time,date
-        mov     bx,handle
-        mov    al,action
-        mov    cx,word ptr time
-        mov    dx,word ptr date
-        mov    ah,57H
-        int    21H
-        endm
-    ;                                  Function Request 58H
-    ALLOC_STRAT  macro  code,strategy
-        mov    bx,strategy
-        mov    al,code
-        mov    ah,58H
-        int    21H
-        endm
+LFN_CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
+		LDS	DX,PATH
+		MOV	BL,ACTION
+		MOV	CX,ATTRIB
+		MOV	AX,7143H
+		INT	21H
+		ENDM
 
-;                                  Function Request 59H
-GET_ERROR  macro
-        mov    ah,59h
-	XOR	BX, BX
-        int    21H
-        endm
+IOCTL_DATA	MACRO	CODE,HANDLE
+		MOV	BX,HANDLE
+		MOV	AL,CODE
+		MOV	AH,44H
+		INT	21H
+		ENDM
 
-    ;                                  Function Request 5AH
-    CREATE_TEMP  macro  pathname,attrib
-                mov    cx,attrib
-                mov    dx,offset pathname
-                mov    ah,5AH
-                int    21H
-                endm
-    ;                                  Function Request 5BH
-    CREATE_NEW  macro  pathname,attrib
-                mov    cx,attrib
-                mov    dx,offset pathname
-                mov    ah,5BH
-                int    21H
-                endm
-;                                  Function Request 5C00H
-LOCK_FILE        macro  handle,start,bytes
-                mov    bx,handle
-                mov    cx,word ptr start
-                mov    dx,word ptr start+2
-                mov    si,word ptr bytes
-                mov    di,word ptr bytes+2
-                mov    al,0
-                mov    ah,5CH
-                int    21H
-                endm
-    ;                                  Function Request 5C01H
-    UNLOCK      macro  handle,start,bytes
-                mov    bx,handle
-                mov    cx,word ptr start
-                mov    dx,word ptr start+2
-                mov    si,word ptr bytes
-                mov    di,word ptr bytes+2
-                mov    al,1
-                mov    ah,5CH
-                int    21H
-                endm
-    ;                                  Function Request 5E00H
-    GET_MACHINE_NAME  macro  buffer
-                mov    dx,offset buffer
-                mov    al,0
-                mov    ah,5EH
-                int    21H
-                endm
-    ;                                  Function Request 5E02H
-    PRINTER_SETUP  macro  index,lgth,string
-                mov    bx,index
-                mov    cx,lgth
-                mov    dx,offset string
-                mov    al,2
-                mov    ah,5EH
-                int    21H
-                endm
-    ;                                  Function Request 5F02H
-    GET_LIST    macro  index,local,remote
-                mov    bx,index
-                mov    si,offset local
-                mov    di,offset remote
-                mov    al,2
-                mov    ah,5FH
-                int    21H
-                endm
-    ;                                  Function Request 5F03H
-    REDIR       macro  device,value,source,destination
-                mov    bl,device
-                mov    cx,value
-                mov    si,offset source
-                mov    es,seg destination
-                mov    di,offset destination
-                mov    al,03H
-                mov    ah,5FH
-                int    21H
-                endm
-    ;                                  Function Request 5F04H
-    CANCEL_REDIR  macro  local
-                mov    si,offset local
-                mov    al,4
-                mov    ah,5FH
-                int    21H
-                endm
-;                                  Function Request 62H
-GET_PSP     macro
-                mov    ah,62H
-                int    21H
-                endm
-    ;
-    ;
-    ; *******************
-    ;  General
-    ; *******************
-    ;
-    DISPLAY_ASCIZ  macro  asciz_string
-        local  search,found_it
-        mov    bx,offset asciz_string
+IOCTL_CHAR	MACRO	CODE,HANDLE,BUFFER
+		MOV	BX,HANDLE
+		MOV	DX,OFFSET BUFFER
+		MOV	AL,CODE
+		MOV	AH,44H
+		INT	21H
+		ENDM
 
-    search:
-        cmp    byte ptr [bx],0
-        je     found_it
-        inc    bx
-        jmp short search
+IOCTL_STATUS	MACRO	CODE,DRIVE,BUFFER
+		MOV	BL,DRIVE
+		MOV	DX,OFFSET BUFFER
+		MOV	AL,CODE
+		MOV	AH,44H
+		INT	21H
+		ENDM
 
-    found_it:
-        mov    byte ptr [bx],"$"
-        display asciz_string
-        mov    byte ptr [bx],0
-        display_char 0DH
-        display_char 0AH
-        endm
-    ;
-    MOVE_STRING  macro  source,destination,count
-        push   es
-        push   ds
-        pop    es
-        assume es:code
-        mov    si,offset source
-        mov    di,offset destination
-        mov    cx,count
-    rep movs   es:destination,source
-        assume es:nothing
-        pop    es
-        endm
-    ;
-    CONVERT  macro  value,base,destination
-        local  table,start
-        jmp    start
-    table  db   "0123456789ABCDEF"
+IOCTL_STATUS	MACRO	CODE,HANDLE
+		MOV	BX,HANDLE
+		MOV	AL,CODE
+		MOV	AH,44H
+		INT	21H
+		ENDM
 
-    start:
-        push   ax
-        push   bx
-        push   dx
-        mov    al,value
-        xor    ah,ah
-        xor    bx,bx
-        div    base
-        mov    bl,al
-        mov    al,cs:table[bx]
-        mov    destination,al
-        mov    bl,ah
-        mov    al,cs:table[bx]
-        mov    destination[1],al
-        pop    dx
-        pop    bx
-        pop    ax
-        endm
-    ;
-    CONVERT_TO_BINARY  macro  string,number,value
-        local  ten,start,calc,mult,no_mult
-        jmp    start
-    ten  db     10
+IOCTL_CHANGE	MACRO	DRIVE
+		MOV	BL,DRIVE
+		MOV	AL,08H
+		MOV	AH,44H
+		INT	21H
+		ENDM
 
-    start:
-        mov    value,0
-        xor    cx,cx
-        mov    cl,number
-        xor    si,si
+IOCTL_RBLOCK	MACRO	DRIVE
+		MOV	BL,DRIVE
+		MOV	AL,09H
+		MOV	AH,44H
+		INT	21H
+		ENDM
 
-    calc:
-        xor    ax,ax
-        mov    al,string[si]
-        sub    al,48
-        cmp    cx,2
-        jl     no_mult
-        push   cx
-        dec    cx
+IOCTL_RHANDLE	MACRO	HANDLE
+		MOV	BX,HANDLE
+		MOV	AL,0AH
+		MOV	AH,44H
+		INT	21H
+		ENDM
 
-    mult:
-        mul    cs:ten
-        loop   mult
-        pop    cx
+IOCTL_RETRY	MACRO	RETRIES,WAIT
+		MOV	DX,RETRIES
+		MOV	CX,WAIT
+		MOV	AL,0BH
+		MOV	AH,44H
+		INT	21H
+		ENDM
 
-    no_mult:
-        add    value,ax
-        inc    si
-        loop   calc
-        endm
-    ;
-    CONVERT_DATE  macro  dir_entry
-        mov    dx,word ptr dir_entry[24]
-        mov    cl,5
-        shr    dl,cl
-        mov    dh,dir_entry[24]
-        and    dh,1FH
-        xor    cx,cx
-        mov    cl,dir_entry[25]
-        shr    cl,1
-        add    cx,1980
-        endm
-    ;
-    PACK_DATE  macro  date
-        local set_bit
-    ;
-    ;  On entry: DH=day, DL=month, CX=(year-1980)
-    ;
-        sub   cx,1980
-        push  cx
-        mov   date,dh
-        mov   cl,5
-        shl   dl,cl
-        pop   cx
-        jnc   set_bit
-        or    cl,80h
+GENERIC_IOCTL_HANDLES	MACRO HANDLE,FUNCTION,CATEGORY,BUFFER
+		MOV    CH,05H
+		MOV	CL,FUNCTION
+		MOV	DX,OFFSET BUFFER
+		MOV	BX,HANDLE
+		MOV	AH,44H
+		MOV	AL,0CH
+		INT	21H
+		ENDM
 
-    set_bit:
-        or    date,dl
-        rol   cl,1
-        mov   date[1],cl
-        endm
+GENERIC_IOCTL_BLOCK	MACRO	DRIVE_NUM,FUNCTION,CATEGORY,PARM_BLK
+		MOV	CH,08H
+		MOV	CL,FUNCTION
+		MOV	DX,OFFSET PARM_BLK - 1
+		MOV	BX,DRIVE_NUM
+		MOV	AH,44H
+		MOV	AL,0DH
+		INT	21H
+		ENDM
+
+IOCTL_GET_DRIVE_MAP	MACRO	LOGICAL_DRV
+		MOV	BX,LOGICAL_DRV
+		MOV	AH,44H
+		MOV	AL,0EH
+		INT	21H
+		ENDM
+
+IOCTL_SET_DRIVE_MAP	MACRO	LOGICAL_DRV
+		MOV	BX,LOGICAL_DRV
+		MOV	AH,44H
+		MOV	AL,0FH
+		INT	21H
+		ENDM
+
+XDUP		MACRO	HANDLE
+		MOV	BX,HANDLE
+		MOV	AH,45H
+		INT	21H
+		ENDM
+
+XDUP2		MACRO	HANDLE1,HANDLE2
+		MOV	BX,HANDLE1
+		MOV	CX,HANDLE2
+		MOV	AH,46H
+		INT	21H
+		ENDM
+
+GET_DIR		MACRO	DRIVE,BUFFER
+		MOV	DL,DRIVE
+		MOV	SI,BUFFER
+		MOV	AH,47H
+		INT	21H
+		ENDM
+
+ALLOCATE_MEMORY	MACRO	BYTES
+		MOV	BX,BYTES
+		MOV	CL,4
+		SHR	BX,CL
+		INC	BX
+		MOV	AH,48H
+		INT	21H
+		ENDM
+
+FREE_MEMORY	MACRO	SEG_ADDR
+		MOV	AX,SEG_ADDR
+		MOV	ES,AX
+		MOV	AH,49H
+		INT	21H
+		ENDM
+
+SET_BLOCK	MACRO	LAST_BYTE
+		MOV	BX,OFFSET LAST_BYTE
+		MOV	CL,4
+		SHR	BX,CL
+		ADD	BX,17
+		MOV	AH,4AH
+		INT	21H
+		MOV	AX,BX
+		SHL	AX,CL
+		DEC	AX
+		MOV	SP,AX
+		MOV	BP,SP
+		ENDM
+
+EXEC		MACRO	PATH,COMMAND,PARMS
+		MOV	DX,OFFSET PATH
+		MOV	BX,OFFSET PARMS
+		MOV	WORD PTR PARMS[02H],OFFSET COMMAND
+		MOV	WORD PTR PARMS[04H],CS
+		MOV	WORD PTR PARMS[06H],5CH
+		MOV	WORD PTR PARMS[08H],ES
+		MOV	WORD PTR PARMS[0AH],6CH
+		MOV	WORD PTR PARMS[0CH],ES
+		MOV	AL,0
+		MOV	AH,4BH
+		INT	21H
+		ENDM
+
+EXEC_OVL	MACRO	PATH,PARMS,SEG_ADDR
+		MOV	DX,OFFSET PATH
+		MOV	BX,OFFSET PARMS
+		MOV	PARMS,SEG_ADDR
+		MOV	PARMS[02H],SEG_ADDR
+		MOV	AL,3
+		MOV	AH,4BH
+		INT	21H
+		ENDM
+
+@Exec		MACRO	PATH, PARMS, SEGPATH, SEGPARMS, OVERLAY
+		MOV	DX,OFFSET PATH
+		MOV	BX,OFFSET PARMS
+
+		IFNB <SEGPATH>
+		MOV	AX, SEGPATH
+		MOV	DS, AX
+		ENDIF
+
+		IFNB <SEGPARAMS>
+		MOV	AX, SEGPARAMS
+		MOV	ES, AX
+		ENDIF
+
+		IFB	<OVERLAY>
+		XOR	AX,AX
+		ELSE
+		MOV	AL,3
+		ENDIF
+		MOV	AH,4BH
+		INT	21H
+		ENDM
+
+END_PROCESS	MACRO	RETURN_CODE
+		MOV	AL,RETURN_CODE
+		MOV	AH,4CH
+		INT	21H
+		ENDM
+
+@Exit		MACRO	RETURN
+		MOV	AL,RETURN
+		MOV	AH,4CH
+		INT	21H
+		ENDM
+
+RET_CODE	MACRO
+		MOV	AH,4DH
+		INT	21H
+		ENDM
+
+@GetRet		MACRO
+		MOV	AH,4DH
+		INT	21H
+		ENDM
+
+FIND_FIRST_FILE	MACRO	PATH,ATTRIB
+		MOV	DX,OFFSET PATH
+		MOV	CX,ATTRIB
+		MOV	AH,4EH
+		INT	21H
+		ENDM
+
+FIND_NEXT_FILE	MACRO
+		MOV	AH,4FH
+		INT	21H
+		ENDM
+
+@GetNext	MACRO
+		MOV	AH,4FH
+		INT	21H
+		ENDM
+
+GET_VERIFY	MACRO
+		MOV	AH,54H
+		INT	21H
+		ENDM
+
+RENAME_FILE	MACRO	OLD_PATH,NEW_PATH
+		LDS	DX, OLD_PATH
+		LES	DI, NEW_PATH
+		MOV	AH,56H
+		INT	21H
+		ENDM
+
+LFN_RENAME_FILE	MACRO	OLD_PATH,NEW_PATH
+		LDS	DX, OLD_PATH
+		LES	DI, NEW_PATH
+		MOV	AX,7156H
+		INT	21H
+		ENDM
+
+GET_SET_DATE_TIME	MACRO	HANDLE,ACTION,TIME,DATE
+		MOV	BX,HANDLE
+		MOV	AL,ACTION
+		MOV	CX,WORD PTR TIME
+		MOV	DX,WORD PTR DATE
+		MOV	AH,57H
+		INT	21H
+		ENDM
+
+ALLOC_STRAT	MACRO	CODE,STRATEGY
+		MOV	BX,STRATEGY
+		MOV	AL,CODE
+		MOV	AH,58H
+		INT	21H
+		ENDM
+
+GET_ERROR	MACRO
+		MOV	AH,59H
+		XOR	BX, BX
+		INT	21H
+		ENDM
+
+CREATE_TEMP	MACRO	PATHNAME,ATTRIB
+		MOV	CX,ATTRIB
+		MOV	DX,OFFSET PATHNAME
+		MOV	AH,5AH
+		INT	21H
+		ENDM
+
+CREATE_NEW	MACRO	PATHNAME,ATTRIB
+		MOV	CX,ATTRIB
+		MOV	DX,OFFSET PATHNAME
+		MOV	AH,5BH
+		INT	21H
+		ENDM
+
+LOCK_FILE	MACRO	HANDLE,START,BYTES
+		MOV	BX,HANDLE
+		MOV	CX,WORD PTR START
+		MOV	DX,WORD PTR START+2
+		MOV	SI,WORD PTR BYTES
+		MOV	DI,WORD PTR BYTES+2
+		MOV	AL,0
+		MOV	AH,5CH
+		INT	21H
+		ENDM
+
+UNLOCK		MACRO	HANDLE,START,BYTES
+		MOV	BX,HANDLE
+		MOV	CX,WORD PTR START
+		MOV	DX,WORD PTR START+2
+		MOV	SI,WORD PTR BYTES
+		MOV	DI,WORD PTR BYTES+2
+		MOV	AL,1
+		MOV	AH,5CH
+		INT	21H
+		ENDM
+
+GET_MACHINE_NAME	MACRO	BUFFER
+		MOV	DX,OFFSET BUFFER
+		MOV	AL,0
+		MOV	AH,5EH
+		INT	21H
+		ENDM
+
+PRINTER_SETUP	MACRO	INDEX,LGTH,STRING
+		MOV	BX,INDEX
+		MOV	CX,LGTH
+		MOV	DX,OFFSET STRING
+		MOV	AL,2
+		MOV	AH,5EH
+		INT	21H
+		ENDM
+
+GET_LIST	MACRO	INDEX,LOCAL,REMOTE
+		MOV	BX,INDEX
+		MOV	SI,OFFSET LOCAL
+		MOV	DI,OFFSET REMOTE
+		MOV	AL,2
+		MOV	AH,5FH
+		INT	21H
+		ENDM
+
+REDIR		MACRO	DEVICE,VALUE,SOURCE,DESTINATION
+		MOV	BL,DEVICE
+		MOV	CX,VALUE
+		MOV	SI,OFFSET SOURCE
+		MOV	ES,SEG DESTINATION
+		MOV	DI,OFFSET DESTINATION
+		MOV	AL,03H
+		MOV	AH,5FH
+		INT	21H
+		ENDM
+
+CANCEL_REDIR	MACRO	LOCAL
+		MOV	SI,OFFSET LOCAL
+		MOV	AL,4
+		MOV	AH,5FH
+		INT	21H
+		ENDM
+
+GET_PSP		MACRO
+		MOV	AH,62H
+		INT	21H
+		ENDM
+
+
+DISPLAY_ASCIZ	MACRO	ASCIZ_STRING
+		LOCAL	SEARCH,FOUND_IT
+		MOV	BX,OFFSET ASCIZ_STRING
+
+		SEARCH:
+		CMP	BYTE PTR [BX],0
+		JE	FOUND_IT
+		INC	BX
+		JMP SHORT SEARCH
+
+FOUND_IT:
+		MOV	BYTE PTR [BX],"$"
+		DISPLAY	ASCIZ_STRING
+		MOV	BYTE PTR [BX],0
+		DISPLAY_CHAR	0DH
+		DISPLAY_CHAR	0AH
+		ENDM
+
+MOVE_STRING	MACRO	SOURCE,DESTINATION,COUNT
+		PUSH	ES
+		PUSH	DS
+		POP	ES
+		ASSUME	ES:CODE
+		MOV	SI,OFFSET SOURCE
+		MOV	DI,OFFSET DESTINATION
+		MOV	CX,COUNT
+	REP	MOVS	ES:DESTINATION,SOURCE
+		ASSUME	ES:NOTHING
+		POP	ES
+		ENDM
+
+CONVERT		MACRO	VALUE,BASE,DESTINATION
+		LOCAL	TABLE,START
+		JMP	START
+TABLE		DB	"0123456789ABCDEF"
+
+START:
+		PUSH	AX
+		PUSH	BX
+		PUSH	DX
+		MOV	AL,VALUE
+		XOR	AH,AH
+		XOR	BX,BX
+		DIV	BASE
+		MOV	BL,AL
+		MOV	AL,CS:TABLE[BX]
+		MOV	DESTINATION,AL
+		MOV	BL,AH
+		MOV	AL,CS:TABLE[BX]
+		MOV	DESTINATION[1],AL
+		POP	DX
+		POP	BX
+		POP	AX
+		ENDM
+
+CONVERT_TO_BINARY	MACRO  STRING,NUMBER,VALUE
+		LOCAL	TEN,START,CALC,MULT,NO_MULT
+		JMP	START
+TEN		DB	10
+
+START:
+		MOV	VALUE,0
+		XOR	CX,CX
+		MOV	CL,NUMBER
+		XOR	SI,SI
+
+CALC:
+		XOR	AX,AX
+		MOV	AL,STRING[SI]
+		SUB	AL,48
+		CMP	CX,2
+		JL	NO_MULT
+		PUSH	CX
+		DEC	CX
+
+MULT:
+		MUL	CS:TEN
+		LOOP	MULT
+		POP	CX
+
+NO_MULT:
+		ADD	VALUE,AX
+		INC	SI
+		LOOP	CALC
+		ENDM
+
+CONVERT_DATE	MACRO	DIR_ENTRY
+		MOV	DX,WORD PTR DIR_ENTRY[24]
+		MOV	CL,5
+		SHR	DL,CL
+		MOV	DH,DIR_ENTRY[24]
+		AND	DH,1FH
+		XOR	CX,CX
+		MOV	CL,DIR_ENTRY[25]
+		SHR	CL,1
+		ADD	CX,1980
+		ENDM
+
+PACK_DATE	MACRO	DATE
+		LOCAL	SET_BIT
 ;
+  ON ENTRY: DH=DAY, DL=MONTH, CX=(YEAR-1980)
+;
+		SUB	CX,1980
+		PUSH	CX
+		MOV	DATE,DH
+		MOV	CL,5
+		SHL	DL,CL
+		POP	CX
+		JNC	SET_BIT
+		OR	CL,80H
+
+SET_BIT:
+		OR	DATE,DL
+		ROL	CL,1
+		MOV	DATE[1],CL
+		ENDM
+;
+if 0
+@GetKey echo, cc, clear
+@Read ofset, bytes, handle, segmnt
+@Write ofset, bytes, handle, segmnt
+@MakFil path, atrib, segmnt, kind
+@OpenFil path, access, segmnt
+@MoveFil old, new, segold, segnew
+@GetFirst path, atrib, segmnt
+@GetDir buffer, drive, segmnt
+@FreeBlok segmnt
+@GetBlok graphs
+@ModBlok graphs, segmnt
+@GetFilSz handle
+endif
