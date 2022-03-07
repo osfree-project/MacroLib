@@ -1,7 +1,9 @@
 INCLUDE	DOS.INC
 
 _DATA	SEGMENT 
-Hello	DB	"Hello$"
+HelloStr	DB	"Hello$"
+pHelloStr	DW	HelloStr
+fpHelloStr	DD	HelloStr
 _DATA	ENDS
 
 _STACK	SEGMENT STACK
@@ -10,7 +12,13 @@ _STACK	ENDS
 
 _TEXT	SEGMENT 
 START:
-	@DispStr Hello
+	MOV	AX, _DATA
+	MOV	ES, AX
+	ASSUME DS:_DATA
+	@DispStr HelloStr
+	@DispStr pHelloStr
+	@DispStr fpHelloStr
+
 _TEXT	ENDS
 
 	END	START
