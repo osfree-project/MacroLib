@@ -1307,6 +1307,30 @@ SET_BIT:
 		MOV	DATE[1],CL
 		ENDM
 ;
-if 0
-@GetKey echo, cc, clear
-endif
+@GetKey		MACRO	ECHO, CC, CLEAR
+		IF	ECHO
+			IF	CC
+			MOV	AH, 01H
+			ELSE
+			MOV	AH, 07H
+			ENDIF
+		ELSE
+			IF	CC
+			MOV	AH, 08H
+			ELSE
+			MOV	AH, 07H
+			ENDIF
+		ENDIF
+		IF	CLEAR
+		MOV	AL, AH
+		MOV	AH, 0CH
+		ENDIF
+		INT	21H
+		IF	ECHO
+			IF	NOT CC
+			MOV	DL, AL
+			MOV	AH, 02H
+			INT	21H
+			ENDIF
+		ENDIF
+		ENDM
