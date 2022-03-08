@@ -15,9 +15,16 @@ START:
 	MOV	AX, _DATA
 	MOV	ES, AX
 	ASSUME DS:_DATA
+
+	; MASM 5.x style
 	@DispStr HelloStr
 	@DispStr pHelloStr
 	@DispStr fpHelloStr
+
+	; MASM 6.x style
+	DISPLAY HelloStr
+	DISPLAY pHelloStr
+	DISPLAY fpHelloStr
 
 _TEXT	ENDS
 
