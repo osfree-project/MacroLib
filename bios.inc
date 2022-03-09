@@ -19,20 +19,45 @@
 		INT	10H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 00h    Set Video Mode
+;
+;
+
+
 @SetMode	MACRO	MODE
 		MOV	AL,MODE
 		@VID	0H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH =0Fh    Get  Current Video Mode
+;
+;
+
 @GetMode	MACRO
-		@VID	15
+		@VID	0Fh
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 01h    Set Cursor Shape Size
+;
+;
 
 @SetCurSz	MACRO	FIRST,LAST
 		MOV	CH,FIRST
 		MOV	CL,LAST
 		@VID	01H
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 02h    Set Cursor Position
+;
+;
 
 @SetCurPos	MACRO	COLUMN,ROW,PAGE
 		MOV	DL,COLUMN
@@ -41,15 +66,33 @@
 		@VID	02H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 03h    Get Current Cursor Position
+;
+;
+
 @GetCur		MACRO	PAGE
 		MOV	BH,PAGE
 		@VID	03H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 05h    Set Active Video Page
+;
+;
+
 @SetPage	MACRO	PAGE
 		MOV	AL,PAGE
 		@VID	05H
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 06h    Scroll Screen Area Up
+;
+;
 
 @ScrollUp	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
 		MOV	CL,UPCOL
@@ -61,6 +104,12 @@
 		@VID	06H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 07h    Scroll Screen Area Down
+;
+;
+
 @ScrollDn	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
 		MOV	CL,UPCOL
 		MOV	CH,UPROW
@@ -71,10 +120,22 @@
 		@VID	07H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 08h    Get Character Attribute
+;
+;
+
 @GetChAtr	MACRO	PAGE
 		MOV	BH,PAGE
 		@VID	08H
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 09h    Print Char With Attribute
+;
+;
 
 @PutChAtr	MACRO	CHAR,ATRIB,PAGE,REPEAT
 		MOV	AL,CHAR
@@ -84,6 +145,12 @@
 		@VID	09H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 0Ah    Print Char
+;
+;
+
 @PutCh		MACRO	CHAR,ATRIB,PAGE,REPEAT
 		MOV	AL,CHAR
 		MOV	BL,ATRIB
@@ -92,17 +159,35 @@
 		@VID	0AH
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 0Bh    Set VGA(?) Palette
+;
+;
+
 @SetPalet	MACRO	COLOR
 		MOV	BH,1
 		MOV	BL,COLOR
 		@VID	0BH
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 0Bh    Set Color
+;
+;
+
 @SetColor	MACRO	COLOR
 		SUB	BH,BH
 		MOV	BL,COLOR
 		@VID	0BH
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 0Ch    Draw Pixel
+;
+;
 
 @SetDot		MACRO	COLOR, ROW, COL
 		MOV	DX, ROW
@@ -111,16 +196,34 @@
 		@VID	0CH
 		ENDM
 
-@GetDot		MACRO	COLOR, ROW
+;-----------------------------------------------------------------------------
+;
+;    AH = 0Dh    Get Pixel
+;
+;
+
+@GetDot		MACRO	COL, ROW
 		MOV	DX, ROW
 		MOV	CX, COL
 		@VID	0DH
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 0Ch    Write char in TTY mode
+;
+;
+
 @WrtTTY		MACRO	CHAR
 		MOV	AL, CHAR
 		@VID	0EH
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 0Fh    Return Video State
+;
+;
 
 @VideoState	MACRO
 		@VID	0FH
@@ -167,7 +270,7 @@ COM		MACRO	FUNC
 ;
 ;-----------------------------------------------------------------------------
 
-COM_INIT	MACRO PORT, RATE
+@AuxInit	MACRO PORT, RATE
 		MOV	DX, PORT
 		MOV	AL, RATE
 		COM	00H
@@ -189,7 +292,7 @@ COM_INIT	MACRO PORT, RATE
 ;
 ;-----------------------------------------------------------------------------
 
-COM_SEND_CHAR	MACRO	PORT, CHAR
+@AuxSendChar	MACRO	PORT, CHAR
 		MOV	DX, PORT
 		MOV	AL, CHAR
 		COM	01H
@@ -210,10 +313,10 @@ COM_SEND_CHAR	MACRO	PORT, CHAR
 ;
 ;-----------------------------------------------------------------------------
 
-COM_RECIEVE_CHAR	MACRO	PORT
-			MOV	DX, PORT
-			COM	02H
-			ENDM
+@AuxRecieveChar	MACRO	PORT
+		MOV	DX, PORT
+		COM	02H
+		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
@@ -264,7 +367,7 @@ COM_RECIEVE_CHAR	MACRO	PORT
 ;
 ;-----------------------------------------------------------------------------
 
-COM_STATUS	MACRO	PORT
+@AuxStatus	MACRO	PORT
 		MOV	DX, PORT
 		COM	03H
 		ENDM
@@ -274,17 +377,34 @@ COM_STATUS	MACRO	PORT
 		INT	17H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 00h    Print Char
+;
+;
+
 @PrnPrint	MACRO	PR, CHAR
 		MOV	AL, CHAR
 		MOV	DX, PR
 		@PRN	0
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 01h    Initialize Printer
+;
+;
+
 @PrnInit	MACRO	PR
 		MOV	DX, PR
 		@PRN	1
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 02h    Get printer status
+;
+;
 @PrnStatus	MACRO	PR
 		MOV	DX, PR
 		@PRN	2
@@ -295,13 +415,31 @@ COM_STATUS	MACRO	PORT
 		INT	16H
 		ENDM
 
-@KbdCharIn	MACRO
+;-----------------------------------------------------------------------------
+;
+;    AH = 00h    Input char from keyboard
+;
+;
+
+@CharIn		MACRO
 		@KBD	0
 		ENDM
 
-@KbdPeek	MACRO
+;-----------------------------------------------------------------------------
+;
+;    AH = 01h    Peek char from keyboard buffer
+;
+;
+
+@CharPeek	MACRO
 		@KBD	1
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 02h    Keyboard Status
+;
+;
 
 @KbdStatus	MACRO
 		@KBD	2
@@ -312,14 +450,31 @@ COM_STATUS	MACRO	PORT
 		INT	13H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 00h    Reset disk
+;
+;
+
+
 @DskReset	MACRO
 		@DSK	0
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 01h    Get disk status
+;
+;
 @DskStatus	MACRO
 		@DSK	1
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 02h    Read Sector
+;
+;
 @DskRead	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS, BUF
 		MOV	DL, DISK
 		MOV	DH, HEAD
@@ -329,6 +484,12 @@ COM_STATUS	MACRO	PORT
 		LES	BX, BUF
 		@DSK	2
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 03h    Write Sector
+;
+;
 
 @DskWrite	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS, BUF
 		MOV	DL, DISK
@@ -340,6 +501,11 @@ COM_STATUS	MACRO	PORT
 		@DSK	3
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 04h    Verify disk sector
+;
+;
 @DskVerify	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS
 		MOV	DL, DISK
 		MOV	DH, HEAD
@@ -349,6 +515,11 @@ COM_STATUS	MACRO	PORT
 		@DSK	4
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 05h    Format Track
+;
+;
 @DskFormat	MACRO	DISK, HEAD, TRACK, BUF
 		MOV	DL, DISK
 		MOV	DH, HEAD
@@ -357,10 +528,21 @@ COM_STATUS	MACRO	PORT
 		@DSK	2
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    Return Memory Size
+;
+;
+
 @MemSize	MACRO
 		INT	12H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    Return Equipment Info 
+;
+;
 @Equipment	MACRO
 		INT	11H
 		ENDM
@@ -371,35 +553,66 @@ COM_STATUS	MACRO	PORT
 		INT	15H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 00h    Turn Tape Motor On
+;
+;
+
 @TapeOn		MACRO
 		@TAPE	0H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 01h    Turn Tape Motor Off
+;
+;
 @TapeOff	MACRO
 		@TAPE	1H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 02h    Read Block From Tape
+;
+;
 @TapeRead	MACRO BUF, LEN
 		LES	BX, BUF
 		MOV	CX, LEN
 		@TAPE	02H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 03h    Write Block To Tape
+;
+;
 @TapeWrite	MACRO BUF, LEN
 		LES	BX, BUF
 		MOV	CX, LEN
 		@TAPE	03H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 00h    Get Current Time
+;
+;
+
 @GetTime	MACRO
 		MOV	AH, 0H
 		INT	1AH
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 01h    Set Current Time
+;
+;
 @SetTime	MACRO	COUNT
 		MOV	CX, HIGHWORD COUNT
 		MOV	DX, LOWWORD COUNT
 		MOV	AH, 1H
 		INT	1AH
 		ENDM
-
