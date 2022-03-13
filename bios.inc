@@ -23,8 +23,8 @@
 ;
 ;    AH = 00h    Set Video Mode
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:00
 ;
-
 
 @SetMode	MACRO	MODE
 		MOV	AL,MODE
@@ -33,21 +33,15 @@
 
 ;-----------------------------------------------------------------------------
 ;
-;    AH =0Fh    Get  Current Video Mode
-;
-;
-
-@GetMode	MACRO
-		@VID	0Fh
-		ENDM
-
-;-----------------------------------------------------------------------------
-;
 ;    AH = 01h    Set Cursor Shape Size
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:01
 ;
 
 @SetCurSz	MACRO	FIRST,LAST
+		PUSH	BX		; BIOS bug
+		@GetMode		; BIOS bug
+		POP	BX		; BIOS bug
 		MOV	CH,FIRST
 		MOV	CL,LAST
 		@VID	01H
@@ -57,6 +51,7 @@
 ;
 ;    AH = 02h    Set Cursor Position
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:02
 ;
 
 @SetCurPos	MACRO	COLUMN,ROW,PAGE
@@ -68,8 +63,9 @@
 
 ;-----------------------------------------------------------------------------
 ;
-;    AH = 03h    Get Current Cursor Position
+;    AH = 03h    Get Current Cursor Position and Size
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:03
 ;
 
 @GetCur		MACRO	PAGE
@@ -81,6 +77,7 @@
 ;
 ;    AH = 05h    Set Active Video Page
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:05
 ;
 
 @SetPage	MACRO	PAGE
@@ -92,9 +89,12 @@
 ;
 ;    AH = 06h    Scroll Screen Area Up
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:06
 ;
 
 @ScrollUp	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+		PUSH	BP		; BIOS bug
+		PUSH	DS		; BIOS bug
 		MOV	CL,UPCOL
 		MOV	CH,UPROW
 		MOV	DL,DOWNCOL
@@ -102,15 +102,20 @@
 		MOV	BH,ATRIB
 		MOV	AL,DISTANCE
 		@VID	06H
+		POP	DS		; BIOS bug
+		POP	BP		; BIOS bug
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 07h    Scroll Screen Area Down
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:07
 ;
 
 @ScrollDn	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+		PUSH	BP		; BIOS bug
+		PUSH	DS		; BIOS bug
 		MOV	CL,UPCOL
 		MOV	CH,UPROW
 		MOV	DL,DOWNCOL
@@ -118,23 +123,33 @@
 		MOV	BH,ATRIB
 		MOV	AL,DISTANCE
 		@VID	07H
+		POP	DS		; BIOS bug
+		POP	BP		; BIOS bug
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
-;    AH = 08h    Get Character Attribute
+;    AH = 08h    Get Character and Attribute
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:08
 ;
 
 @GetChAtr	MACRO	PAGE
+		PUSH	SI		; BIOS bug
+		PUSH	DI		; BIOS bug
+		PUSH	BP		; BIOS bug
 		MOV	BH,PAGE
 		@VID	08H
+		POP	BP		; BIOS bug
+		POP	DI		; BIOS bug
+		POP	SI		; BIOS bug
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 09h    Print Char With Attribute
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:09
 ;
 
 @PutChAtr	MACRO	CHAR,ATRIB,PAGE,REPEAT
@@ -149,6 +164,7 @@
 ;
 ;    AH = 0Ah    Print Char
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0A
 ;
 
 @PutCh		MACRO	CHAR,ATRIB,PAGE,REPEAT
@@ -163,6 +179,7 @@
 ;
 ;    AH = 0Bh    Set VGA(?) Palette
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0B
 ;
 
 @SetPalet	MACRO	COLOR
@@ -175,6 +192,7 @@
 ;
 ;    AH = 0Bh    Set Color
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0B
 ;
 
 @SetColor	MACRO	COLOR
@@ -187,12 +205,14 @@
 ;
 ;    AH = 0Ch    Draw Pixel
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0C
 ;
 
-@SetDot		MACRO	COLOR, ROW, COL
+@SetDot		MACRO	COLOR, ROW, COL, PAGE
+		MOV	BH, PAGE
 		MOV	DX, ROW
 		MOV	CX, COL
-		MOV	AL,COLOR
+		MOV	AL, COLOR
 		@VID	0CH
 		ENDM
 
@@ -200,9 +220,11 @@
 ;
 ;    AH = 0Dh    Get Pixel
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0D
 ;
 
-@GetDot		MACRO	COL, ROW
+@GetDot		MACRO	COL, ROW, PAGE
+		MOV	BH, PAGE
 		MOV	DX, ROW
 		MOV	CX, COL
 		@VID	0DH
@@ -210,24 +232,47 @@
 
 ;-----------------------------------------------------------------------------
 ;
-;    AH = 0Ch    Write char in TTY mode
+;    AH = 0Eh    Write char in TTY mode
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0E
 ;
 
-@WrtTTY		MACRO	CHAR
+@WrtTTY		MACRO	CHAR, PAGE
+		IFNB	PAGE
+		MOV	BH, PAGE
+		ENDIF
+		PUSH	SI		; BIOS bug
+		PUSH	DI		; BIOS bug
+		PUSH	BP		; BIOS bug
 		MOV	AL, CHAR
 		@VID	0EH
+		POP	BP		; BIOS bug
+		POP	DI		; BIOS bug
+		POP	SI		; BIOS bug
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Fh    Return Video State
 ;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0F
 ;
 
 @VideoState	MACRO
 		@VID	0FH
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 0Fh    Get Current Video Mode
+;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0F
+;
+
+@GetMode	MACRO
+		@VID	0Fh
+		ENDM
+
 
 
 COM		MACRO	FUNC
