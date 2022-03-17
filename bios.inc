@@ -272,7 +272,7 @@
 @GetMode	MACRO
 		@VID	0Fh
 		ENDM
-
+ 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 1Ah    Get Display Configuration
