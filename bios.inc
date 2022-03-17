@@ -273,7 +273,29 @@
 		@VID	0Fh
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 1Ah    Get Display Configuration
+;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:1A
+;
+ 
+@GetDisplay	MACRO
+		XOR	AX, AX
+		@VID	1Ah
+		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 1Ch    Get Display Configuration
+;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:1C
+;
+
+@GetVideoState	MACRO
+		XOR	AX, AX
+		@VID	1Ch
+		ENDM
 
 COM		MACRO	FUNC
 		MOV	AH, FUNC
