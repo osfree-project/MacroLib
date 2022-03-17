@@ -297,6 +297,19 @@
 		@VID	1Ch
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 12h    Alternate functions
+;
+;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:12
+;
+
+@GetEGAInfo	MACRO
+		MOV	AH,12H
+		MOV	BL,10H
+		INT	10H
+		ENDM
+		
 COM		MACRO	FUNC
 		MOV	AH, FUNC
 		INT	14H
