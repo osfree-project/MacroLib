@@ -9,13 +9,17 @@
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
 ;
 ;   This library based on IBM 5150 Technical Reference #6322507 of Apr 1984.
-;   Functions, found in later BIOSes not covered. Macro names mostly constructed
-;   from MASM 5.x documentation.
+;   Functions, found in later BIOSes mostly not covered. Macro names mostly constructed
+;   from MASM 5.x and MASM 6.x documentation.
 ;
 ;*/
 
 @vid		MACRO	FUNC
-		MOV	AH,FUNC
+		IF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
+			MOV	AX,FUNC
+		ENDIF
 		INT	10H
 		ENDM
 
@@ -27,8 +31,13 @@
 ;
 
 @SetMode	MACRO	MODE
-		MOV	AL,MODE
-		@VID	0H
+		IF TYPE (MOVE) EQ 1	; BYTES (1 BYTE)
+			MOV	AX, WORD MODE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		@VID	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -65,7 +74,11 @@
 		IFDIFI	<ROW>, <DH>
 		MOV	DH,ROW
 		ENDIF
+		IFNB	<PAGE>
 		MOV	BH,PAGE
+		ELSE
+		SUB	BH, BH
+		ENDIF
 		@VID	02H
 		ENDM
 
@@ -77,7 +90,11 @@
 ;
 
 @GetCur		MACRO	PAGE
+		IFNB	<PAGE>
 		MOV	BH,PAGE
+		ELSE
+		SUB	BH, BH
+		ENDIF
 		@VID	03H
 		ENDM
 
@@ -89,7 +106,11 @@
 ;
 
 @SetPage	MACRO	PAGE
+		IFNB	<PAGE>
 		MOV	AL,PAGE
+		ELSE
+		SUB	AL, AL
+		ENDIF
 		@VID	05H
 		ENDM
 
@@ -146,7 +167,11 @@
 		PUSH	SI		; BIOS bug
 		PUSH	DI		; BIOS bug
 		PUSH	BP		; BIOS bug
+		IFNB	<PAGE>
 		MOV	BH,PAGE
+		ELSE
+		SUB	BH, BH
+		ENDIF
 		@VID	08H
 		POP	BP		; BIOS bug
 		POP	DI		; BIOS bug
@@ -165,7 +190,11 @@
 		MOV	AL,CHAR
 		ENDIF
 		MOV	BL,ATRIB
+		IFNB	<PAGE>
 		MOV	BH,PAGE
+		ELSE
+		SUB	BH, BH
+		ENDIF
 		IFDIFI	<REPEAT>,<CX>
 		MOV	CX,REPEAT
 		ENDIF
@@ -186,7 +215,11 @@
 		IFNB	<ATRIB>
 		MOV	BL,ATRIB
 		ENDIF
+		IFNB	<PAGE>
 		MOV	BH,PAGE
+		ELSE
+		SUB	BH, BH
+		ENDIF
 		IFDIFI	<REPEAT>, <CX>
 		MOV	CX,REPEAT
 		ENDIF
@@ -227,7 +260,11 @@
 ;
 
 @SetDot		MACRO	COLOR, ROW, COL, PAGE
-		MOV	BH, PAGE
+		IFNB	<PAGE>
+		MOV	BH,PAGE
+		ELSE
+		SUB	BH, BH
+		ENDIF
 		MOV	DX, ROW
 		MOV	CX, COL
 		MOV	AL, COLOR
@@ -242,7 +279,11 @@
 ;
 
 @GetDot		MACRO	COL, ROW, PAGE
-		MOV	BH, PAGE
+		IFNB	<PAGE>
+		MOV	BH,PAGE
+		ELSE
+		SUB	BH, BH
+		ENDIF
 		MOV	DX, ROW
 		MOV	CX, COL
 		@VID	0DH
@@ -258,6 +299,8 @@
 @WrtTTY		MACRO	CHAR, PAGE
 		IFNB	<PAGE>
 		MOV	BH, PAGE
+		ELSE
+		SUB	BH, BH
 		ENDIF
 		PUSH	SI		; BIOS bug
 		PUSH	DI		; BIOS bug
