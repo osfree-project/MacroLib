@@ -3,7 +3,7 @@
 ;
 ;   @brief BIOS Macro Library
 ;
-;   (c) osFree Project 2018-2022, <http://www.osFree.org>
+;   (c) osFree Project 2008-2022, <http://www.osFree.org>
 ;   for licence see licence.txt in root directory, or project website
 ;
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
