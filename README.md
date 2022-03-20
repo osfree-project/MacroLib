@@ -51,9 +51,9 @@ Set Cursor Position
 
 ### Parameters
 
-column (BYTE) - new cursor column (zero based)
-row (BYTE) - new cursor row (zero based)
-page (BYTE) - optional video page number
+  * column (BYTE) - new cursor column (zero based)
+  * row (BYTE) - new cursor row (zero based)
+  * page (BYTE) - optional video page number
 
 ### Return
 
@@ -99,9 +99,17 @@ Scroll Screen Area Up
 
 ### Syntax
 
-@ScrollUp	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+@ScrollUp distance, atrib, upcol, uprow, downcol, downrow
 
 ### Parameters
+
+distance (BYTE) - rows to scroll
+atrib (BYTE) - fill attribute
+upcol (BYTE) - upper left column
+uprow (BYTE) - upper left row
+downcol (BYTE) - down right column
+downrow (BYTE) - down right row
+
 ### Return
 
 ## @ScrollDn
@@ -112,9 +120,17 @@ Scroll Screen Area Down
 
 ### Syntax
 
-@ScrollDn	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+@ScrollDn distance, atrib, upcol, uprow, downcol, downrow
 
 ### Parameters
+
+distance (BYTE) - rows to scroll
+atrib (BYTE) - fill attribute
+upcol (BYTE) - upper left column
+uprow (BYTE) - upper left row
+downcol (BYTE) - down right column
+downrow (BYTE) - down right row
+
 ### Return
 
 ## @GetChAtr
