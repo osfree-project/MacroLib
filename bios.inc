@@ -10,7 +10,7 @@
 ;
 ;   This library based on IBM 5150 Technical Reference #6322507 of Apr 1984.
 ;   Functions, found in later BIOSes mostly not covered. Macro names mostly constructed
-;   from MASM 5.x and MASM 6.x documentation.
+;   from MASM 5.x, MASM 6.x and ALP documentation.
 ;
 ;*/
 
