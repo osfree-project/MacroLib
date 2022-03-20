@@ -14,7 +14,7 @@ Set the current video mode
 
 ### Parameters
 
-mode (BYTE) - mode
+  * mode (BYTE) - mode
 
 ### Return
 
@@ -32,8 +32,8 @@ Set Cursor Shape Size
 
 ### Parameters
 
-first (BYTE) - first scan line
-last (BYTE) - last scan line
+  * first (BYTE) - first scan line
+  * last (BYTE) - last scan line
 
 ### Return
 
@@ -71,7 +71,7 @@ Get Current Cursor Position and Size
 
 ### Parameters
 
-page (BYTE) - optional video page number
+  * page (BYTE) - optional video page number
 
 ### Return
 
@@ -87,7 +87,7 @@ Set Active Video Page
 
 ### Parameters
 
-page (BYTE) - optional video page number
+  * page (BYTE) - optional video page number
 
 ### Return
 
@@ -103,12 +103,12 @@ Scroll Screen Area Up
 
 ### Parameters
 
-distance (BYTE) - rows to scroll
-atrib (BYTE) - fill attribute
-upcol (BYTE) - upper left column
-uprow (BYTE) - upper left row
-downcol (BYTE) - down right column
-downrow (BYTE) - down right row
+  * distance (BYTE) - rows to scroll
+  * atrib (BYTE) - fill attribute
+  * upcol (BYTE) - upper left column
+  * uprow (BYTE) - upper left row
+  * downcol (BYTE) - down right column
+  * downrow (BYTE) - down right row
 
 ### Return
 
@@ -124,12 +124,12 @@ Scroll Screen Area Down
 
 ### Parameters
 
-distance (BYTE) - rows to scroll
-atrib (BYTE) - fill attribute
-upcol (BYTE) - upper left column
-uprow (BYTE) - upper left row
-downcol (BYTE) - down right column
-downrow (BYTE) - down right row
+  * distance (BYTE) - rows to scroll
+  * atrib (BYTE) - fill attribute
+  * upcol (BYTE) - upper left column
+  * uprow (BYTE) - upper left row
+  * downcol (BYTE) - down right column
+  * downrow (BYTE) - down right row
 
 ### Return
 
@@ -145,7 +145,7 @@ Get Character and Attribute
 
 ### Parameters
 
-page (BYTE) - optional video page number
+  * page (BYTE) - optional video page number
 
 ### Return
 
@@ -161,11 +161,11 @@ Print Char With Attribute
 
 ### Parameters
 
-char (BYTE) - code of character
-atrib (BYTE) - character attribute
-col (BYTE) - column
-row (BYTE) - row
-page (BYTE) - optional video page number
+  * char (BYTE) - code of character
+  * atrib (BYTE) - character attribute
+  * col (BYTE) - column
+  * row (BYTE) - row
+  * page (BYTE) - optional video page number
 
 ### Return
 
@@ -181,11 +181,11 @@ Print Char
 
 ### Parameters
 
-char (BYTE) - code of character
-atrib (BYTE) - optional character attribute
-col (BYTE) - column
-row (BYTE) - row
-page (BYTE) - optional video page number
+  * char (BYTE) - code of character
+  * atrib (BYTE) - optional character attribute
+  * col (BYTE) - column
+  * row (BYTE) - row
+  * page (BYTE) - optional video page number
 
 ### Return
 
@@ -227,10 +227,10 @@ Draw Pixel
 
 ### Parameters
 
-color (BYTE) - color
-col (BYTE) - column
-row (BYTE) - row
-page (BYTE) - optional video page number
+  * color (BYTE) - color
+  * col (BYTE) - column
+  * row (BYTE) - row
+  * page (BYTE) - optional video page number
 
 ### Return
 
@@ -246,9 +246,9 @@ Get Pixel Color
 
 ### Parameters
 
-col (BYTE) - column
-row (BYTE) - row
-page (BYTE) - optional video page number
+  * col (BYTE) - column
+  * row (BYTE) - row
+  * page (BYTE) - optional video page number
 
 ### Return
 
@@ -264,8 +264,8 @@ Write char in TTY mode
 
 ### Parameters
 
-char (BYTE) - character code
-page (BYTE) - optional video page number
+  * char (BYTE) - character code
+  * page (BYTE) - optional video page number
 
 ### Return
 
@@ -303,9 +303,9 @@ none
 
 ### Return
 
-AL	    = Mode
-AH	    = Width in characters
-BH	    = Page
+  * AL	    = Mode
+  * AH	    = Width in characters
+  * BH	    = Page
 
 ## @GetDisplay
 
