@@ -31,7 +31,7 @@
 ;
 
 @SetMode	MACRO	MODE
-		IF TYPE (MOVE) EQ 1	; BYTES (1 BYTE)
+		IF TYPE (MODE) EQ 1	; BYTES (1 BYTE)
 			MOV	AX, WORD MODE
 		ELSE
 			ECHO Bad argument
@@ -75,7 +75,12 @@
 		MOV	DH,ROW
 		ENDIF
 		IFNB	<PAGE>
-		MOV	BH,PAGE
+		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
+			MOV	BH,PAGE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ELSE
 		SUB	BH, BH
 		ENDIF
@@ -91,7 +96,12 @@
 
 @GetCur		MACRO	PAGE
 		IFNB	<PAGE>
-		MOV	BH,PAGE
+		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
+			MOV	BH,PAGE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ELSE
 		SUB	BH, BH
 		ENDIF
@@ -107,7 +117,12 @@
 
 @SetPage	MACRO	PAGE
 		IFNB	<PAGE>
-		MOV	AL,PAGE
+		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
+			MOV	AL,PAGE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ELSE
 		SUB	AL, AL
 		ENDIF
@@ -228,14 +243,19 @@
 
 ;-----------------------------------------------------------------------------
 ;
-;    AH = 0Bh    Set VGA(?) Palette
+;    AH = 0Bh    Set Palette
 ;
 ;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0B
 ;
 
 @SetPalet	MACRO	COLOR
 		MOV	BH,1
-		MOV	BL,COLOR
+		IF TYPE (COLOR) EQ 1	; BYTES (1 BYTE)
+			MOV	BL,COLOR
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		@VID	0BH
 		ENDM
 
@@ -248,7 +268,12 @@
 
 @SetColor	MACRO	COLOR
 		SUB	BH,BH
-		MOV	BL,COLOR
+		IF TYPE (COLOR) EQ 1	; BYTES (1 BYTE)
+			MOV	BL,COLOR
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		@VID	0BH
 		ENDM
 
@@ -759,3 +784,5 @@ COM		MACRO	FUNC
 		MOV	AH, 1H
 		INT	1AH
 		ENDM
+
+;@todo: @Scroll, @Cls
