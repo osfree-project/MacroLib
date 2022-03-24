@@ -3,14 +3,18 @@
 ;
 ;   @brief BIOS Macro Library
 ;
-;   (c) osFree Project 2008-2022, <http://www.osFree.org>
+;   (c) osFree Project 2002-2022, <http://www.osFree.org>
 ;   for licence see licence.txt in root directory, or project website
 ;
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
 ;
-;   This library based on IBM 5150 Technical Reference #6322507 of Apr 1984.
-;   Functions, found in later BIOSes mostly not covered. Macro names mostly constructed
+;   This library based on IBM 5150 Technical Reference #6322507 of Apr 1984, MACRO.DOC from MASM 5.x,
+;   Ralf Brown Interrupt list.
+;
+;   Functions, found in later BIOSes mostly not covered, but can be added in future. Macro names mostly constructed
 ;   from MASM 5.x, MASM 6.x and ALP documentation.
+;
+;   Documentation: http://osfree.org/doku/en:docs:macrolib
 ;
 ;*/
 
@@ -49,10 +53,20 @@
 
 @SetCurSz	MACRO	FIRST,LAST
 		IFDIFI	<FIRST>, <CH>
+		IF TYPE (FIRST) EQ 1	; BYTES (1 BYTE)
 		MOV	CH,FIRST
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ENDIF
 		IFDIFI	<LAST>, <CL>
+		IF TYPE (LAST) EQ 1	; BYTES (1 BYTE)
 		MOV	CL,LAST
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ENDIF
 		PUSH	BX		; BIOS bug
 		@GetMode		; BIOS bug
@@ -69,10 +83,20 @@
 
 @SetCurPos	MACRO	COLUMN,ROW,PAGE
 		IFDIFI	<COLUMN>, <DL>
+		IF TYPE (COLUMN) EQ 1	; BYTES (1 BYTE)
 		MOV	DL,COLUMN
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ENDIF
 		IFDIFI	<ROW>, <DH>
+		IF TYPE (ROW) EQ 1	; BYTES (1 BYTE)
 		MOV	DH,ROW
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ENDIF
 		IFNB	<PAGE>
 		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
@@ -183,7 +207,12 @@
 		PUSH	DI		; BIOS bug
 		PUSH	BP		; BIOS bug
 		IFNB	<PAGE>
+		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
 		MOV	BH,PAGE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ELSE
 		SUB	BH, BH
 		ENDIF
@@ -202,11 +231,21 @@
 
 @PutChAtr	MACRO	CHAR,ATRIB,PAGE,REPEAT
 		IFDIFI	<CHAR>,<AL>
+		IF TYPE (CHAR) EQ 1	; BYTES (1 BYTE)
 		MOV	AL,CHAR
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ENDIF
 		MOV	BL,ATRIB
 		IFNB	<PAGE>
+		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
 		MOV	BH,PAGE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ELSE
 		SUB	BH, BH
 		ENDIF
