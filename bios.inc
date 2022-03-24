@@ -195,6 +195,15 @@
 		POP	BP		; BIOS bug
 		ENDM
 
+
+@Scroll		MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+		IF	distance LE 0
+		@ScrollUp -DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+		ELSE
+		@ScrollDn DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+		ENDIF
+		ENDM
+
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 08h    Get Character and Attribute
