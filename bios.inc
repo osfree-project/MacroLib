@@ -204,6 +204,9 @@
 		ENDIF
 		ENDM
 
+@Cls		MACRO
+		@Scroll 24,07h,0,0,79,24
+		ENDM
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 08h    Get Character and Attribute
@@ -217,13 +220,13 @@
 		PUSH	BP		; BIOS bug
 		IFNB	<PAGE>
 		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
-		MOV	BH,PAGE
+			MOV	BH,PAGE
 		ELSE
 			ECHO Bad argument
 			.ERR
 		ENDIF
 		ELSE
-		SUB	BH, BH
+			SUB	BH, BH
 		ENDIF
 		@VID	08H
 		POP	BP		; BIOS bug
