@@ -605,7 +605,9 @@ COM		MACRO	FUNC
 @PrnPrint	MACRO	PR, CHAR
 		MOV	AL, CHAR
 		MOV	DX, PR
+		PUSH	BX		; BIOS bug
 		@PRN	0
+		POP	BX		; BIOS bug
 		ENDM
 
 ;-----------------------------------------------------------------------------
