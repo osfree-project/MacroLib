@@ -54,7 +54,7 @@
 @SetCurSz	MACRO	FIRST,LAST
 		IFDIFI	<FIRST>, <CH>
 		IF TYPE (FIRST) EQ 1	; BYTES (1 BYTE)
-		MOV	CH,FIRST
+			MOV	CH,FIRST
 		ELSE
 			ECHO Bad argument
 			.ERR
@@ -62,7 +62,7 @@
 		ENDIF
 		IFDIFI	<LAST>, <CL>
 		IF TYPE (LAST) EQ 1	; BYTES (1 BYTE)
-		MOV	CL,LAST
+			MOV	CL,LAST
 		ELSE
 			ECHO Bad argument
 			.ERR
@@ -84,7 +84,7 @@
 @SetCurPos	MACRO	COLUMN,ROW,PAGE
 		IFDIFI	<COLUMN>, <DL>
 		IF TYPE (COLUMN) EQ 1	; BYTES (1 BYTE)
-		MOV	DL,COLUMN
+			MOV	DL,COLUMN
 		ELSE
 			ECHO Bad argument
 			.ERR
@@ -92,7 +92,7 @@
 		ENDIF
 		IFDIFI	<ROW>, <DH>
 		IF TYPE (ROW) EQ 1	; BYTES (1 BYTE)
-		MOV	DH,ROW
+			MOV	DH,ROW
 		ELSE
 			ECHO Bad argument
 			.ERR
@@ -106,7 +106,7 @@
 			.ERR
 		ENDIF
 		ELSE
-		SUB	BH, BH
+			SUB	BH, BH
 		ENDIF
 		@VID	02H
 		ENDM
@@ -127,7 +127,7 @@
 			.ERR
 		ENDIF
 		ELSE
-		SUB	BH, BH
+			SUB	BH, BH
 		ENDIF
 		@VID	03H
 		ENDM
@@ -148,7 +148,7 @@
 			.ERR
 		ENDIF
 		ELSE
-		SUB	AL, AL
+			SUB	AL, AL
 		ENDIF
 		@VID	05H
 		ENDM
@@ -198,9 +198,9 @@
 
 @Scroll		MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
 		IF	distance LE 0
-		@ScrollUp -DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+			@ScrollUp -DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
 		ELSE
-		@ScrollDn DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+			@ScrollDn DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
 		ENDIF
 		ENDM
 
@@ -244,25 +244,30 @@
 @PutChAtr	MACRO	CHAR,ATRIB,PAGE,REPEAT
 		IFDIFI	<CHAR>,<AL>
 		IF TYPE (CHAR) EQ 1	; BYTES (1 BYTE)
-		MOV	AL,CHAR
+			MOV	AL,CHAR
 		ELSE
 			ECHO Bad argument
 			.ERR
 		ENDIF
 		ENDIF
-		MOV	BL,ATRIB
+		IF TYPE (ATRIB) EQ 1	; BYTES (1 BYTE)
+			MOV	BL,ATRIB
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		IFNB	<PAGE>
 		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
-		MOV	BH,PAGE
+			MOV	BH,PAGE
 		ELSE
 			ECHO Bad argument
 			.ERR
 		ENDIF
 		ELSE
-		SUB	BH, BH
+			SUB	BH, BH
 		ENDIF
 		IFDIFI	<REPEAT>,<CX>
-		MOV	CX,REPEAT
+			MOV	CX,REPEAT
 		ENDIF
 		@VID	09H
 		ENDM
@@ -276,18 +281,18 @@
 
 @PutCh		MACRO	CHAR,ATRIB,PAGE,REPEAT
 		IFDIFI	<CHAR>, <AL>
-		MOV	AL,CHAR
+			MOV	AL,CHAR
 		ENDIF
 		IFNB	<ATRIB>
-		MOV	BL,ATRIB
+			MOV	BL,ATRIB
 		ENDIF
 		IFNB	<PAGE>
-		MOV	BH,PAGE
+			MOV	BH,PAGE
 		ELSE
-		SUB	BH, BH
+			SUB	BH, BH
 		ENDIF
 		IFDIFI	<REPEAT>, <CX>
-		MOV	CX,REPEAT
+			MOV	CX,REPEAT
 		ENDIF
 		@VID	0AH
 		ENDM
@@ -337,9 +342,9 @@
 
 @SetDot		MACRO	COLOR, ROW, COL, PAGE
 		IFNB	<PAGE>
-		MOV	BH,PAGE
+			MOV	BH,PAGE
 		ELSE
-		SUB	BH, BH
+			SUB	BH, BH
 		ENDIF
 		MOV	DX, ROW
 		MOV	CX, COL
@@ -356,9 +361,9 @@
 
 @GetDot		MACRO	COL, ROW, PAGE
 		IFNB	<PAGE>
-		MOV	BH,PAGE
+			MOV	BH,PAGE
 		ELSE
-		SUB	BH, BH
+			SUB	BH, BH
 		ENDIF
 		MOV	DX, ROW
 		MOV	CX, COL
@@ -374,15 +379,15 @@
 
 @WrtTTY		MACRO	CHAR, PAGE
 		IFNB	<PAGE>
-		MOV	BH, PAGE
+			MOV	BH, PAGE
 		ELSE
-		SUB	BH, BH
+			SUB	BH, BH
 		ENDIF
 		PUSH	SI		; BIOS bug
 		PUSH	DI		; BIOS bug
 		PUSH	BP		; BIOS bug
 		IFDIFI	<CHAR>, <AL>
-		MOV	AL, CHAR
+			MOV	AL, CHAR
 		ENDIF
 		@VID	0EH
 		POP	BP		; BIOS bug
@@ -703,7 +708,11 @@ COM		MACRO	FUNC
 		MOV	CL, SECTOR
 		MOV	AL, SECTS
 		LES	BX, BUF
+		PUSH	DX		; BIOS bug
+		STC			; BIOS bug
 		@DSK	2
+		STI			; BIOS bug
+		POP	DX		; BIOS bug
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -726,8 +735,11 @@ COM		MACRO	FUNC
 ;
 ;    AH = 04h    Verify disk sector
 ;
+; @todo: old bioses expect also buffer
 ;
+
 @DskVerify	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS
+		@DskReset		; BIOS bug
 		MOV	DL, DISK
 		MOV	DH, HEAD
 		MOV	CH, TRACK
@@ -741,12 +753,13 @@ COM		MACRO	FUNC
 ;    AH = 05h    Format Track
 ;
 ;
+
 @DskFormat	MACRO	DISK, HEAD, TRACK, BUF
 		MOV	DL, DISK
 		MOV	DH, HEAD
 		MOV	CH, TRACK
 		LES	BX, BUF
-		@DSK	2
+		@DSK	5
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -838,4 +851,3 @@ COM		MACRO	FUNC
 		INT	1AH
 		ENDM
 
-;@todo: @Scroll, @Cls
