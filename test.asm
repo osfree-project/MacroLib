@@ -5,6 +5,12 @@ _DATA	SEGMENT
 HelloStr	DB	"Hello",0dh,0ah,"$"
 pHelloStr	DW	HelloStr
 fpHelloStr	DD	HelloStr
+
+Welcome		DB	"osFree Macro Library test program v0.xx", 0dh, 0ah, 0dh, 0ah 
+		DB	"1) BIOS tests", 0dh, 0ah
+		DB	"2) DOS tests", 0dh, 0ah, 0dh, 0ah
+		DB	"0) Exit", 0dh, 0ah
+		DB	"$"
 _DATA	ENDS
 
 _STACK	SEGMENT STACK
@@ -18,6 +24,7 @@ START:
 	ASSUME DS:_DATA
 
 	@Cls
+	@DispStr Welcome
 
 	; MASM 5.x style
 	@DispStr HelloStr
