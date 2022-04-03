@@ -19,7 +19,9 @@
 ;*/
 
 @vid		MACRO	FUNC
-		IF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
+		IF (.TYPE (FUNC)) AND 00000100b ; Constant
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
 			MOV	AH,FUNC
 		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
 			MOV	AX,FUNC
@@ -82,6 +84,8 @@
 ;
 
 @SetCurPos	MACRO	COLUMN,ROW,PAGE
+
+		IFNB	<COLUMN>
 		IFDIFI	<COLUMN>, <DL>
 		IF TYPE (COLUMN) EQ 1	; BYTES (1 BYTE)
 			MOV	DL,COLUMN
@@ -90,6 +94,11 @@
 			.ERR
 		ENDIF
 		ENDIF
+		ELSE
+			SUB	DL, DL
+		ENDIF
+
+		IFNB	<ROW>
 		IFDIFI	<ROW>, <DH>
 		IF TYPE (ROW) EQ 1	; BYTES (1 BYTE)
 			MOV	DH,ROW
@@ -98,6 +107,10 @@
 			.ERR
 		ENDIF
 		ENDIF
+		ELSE
+			SUB	DH, DH
+		ENDIF
+
 		IFNB	<PAGE>
 		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
 			MOV	BH,PAGE
@@ -205,7 +218,8 @@
 		ENDM
 
 @Cls		MACRO
-		@Scroll 24,07h,0,0,79,24
+		@Scroll 25,07h,0,0,79,24
+		@SetCurPos
 		ENDM
 ;-----------------------------------------------------------------------------
 ;
