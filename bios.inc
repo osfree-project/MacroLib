@@ -39,11 +39,15 @@
 ;
 
 @SetMode	MACRO	MODE
+		IFNB	<MODE>
 		IF TYPE (MODE) EQ 1	; BYTES (1 BYTE)
 			MOV	AX, WORD MODE
 		ELSE
 			ECHO Bad argument
 			.ERR
+		ENDIF
+		ELSE
+			MOV	AX, 2
 		ENDIF
 		@VID	AX
 		ENDM
