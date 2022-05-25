@@ -40,12 +40,12 @@
 
 @SetMode	MACRO	MODE
 		IFNB	<MODE>
-		IF TYPE (MODE) EQ 1	; BYTES (1 BYTE)
-			MOV	AX, WORD MODE
-		ELSE
-			ECHO Bad argument
-			.ERR
-		ENDIF
+			IF TYPE (MODE) EQ 1	; BYTES (1 BYTE)
+				MOV	AX, WORD MODE
+			ELSE
+				ECHO Bad argument
+				.ERR
+			ENDIF
 		ELSE
 			MOV	AX, 2
 		ENDIF
@@ -61,20 +61,20 @@
 
 @SetCurSz	MACRO	FIRST,LAST
 		IFDIFI	<FIRST>, <CH>
-		IF TYPE (FIRST) EQ 1	; BYTES (1 BYTE)
-			MOV	CH,FIRST
-		ELSE
-			ECHO Bad argument
-			.ERR
-		ENDIF
+			IF TYPE (FIRST) EQ 1	; BYTES (1 BYTE)
+				MOV	CH,FIRST
+			ELSE
+				ECHO Bad argument
+				.ERR
+			ENDIF
 		ENDIF
 		IFDIFI	<LAST>, <CL>
-		IF TYPE (LAST) EQ 1	; BYTES (1 BYTE)
-			MOV	CL,LAST
-		ELSE
-			ECHO Bad argument
-			.ERR
-		ENDIF
+			IF TYPE (LAST) EQ 1	; BYTES (1 BYTE)
+				MOV	CL,LAST
+			ELSE
+				ECHO Bad argument
+				.ERR
+			ENDIF
 		ENDIF
 		PUSH	BX		; BIOS bug
 		@GetMode		; BIOS bug
@@ -93,12 +93,12 @@
 
 		IFNB	<COLUMN>
 		IFDIFI	<COLUMN>, <DL>
-		IF TYPE (COLUMN) EQ 1	; BYTES (1 BYTE)
-			MOV	DL,COLUMN
-		ELSE
-			ECHO Bad argument
-			.ERR
-		ENDIF
+			IF TYPE (COLUMN) EQ 1	; BYTES (1 BYTE)
+				MOV	DL,COLUMN
+			ELSE
+				ECHO Bad argument
+				.ERR
+			ENDIF
 		ENDIF
 		ELSE
 			SUB	DL, DL
@@ -106,24 +106,24 @@
 
 		IFNB	<ROW>
 		IFDIFI	<ROW>, <DH>
-		IF TYPE (ROW) EQ 1	; BYTES (1 BYTE)
-			MOV	DH,ROW
-		ELSE
-			ECHO Bad argument
-			.ERR
-		ENDIF
+			IF TYPE (ROW) EQ 1	; BYTES (1 BYTE)
+				MOV	DH,ROW
+			ELSE
+				ECHO Bad argument
+				.ERR
+			ENDIF
 		ENDIF
 		ELSE
 			SUB	DH, DH
 		ENDIF
 
 		IFNB	<PAGE>
-		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
-			MOV	BH,PAGE
-		ELSE
-			ECHO Bad argument
-			.ERR
-		ENDIF
+			IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
+				MOV	BH,PAGE
+			ELSE
+				ECHO Bad argument
+				.ERR
+			ENDIF
 		ELSE
 			SUB	BH, BH
 		ENDIF
@@ -139,12 +139,12 @@
 
 @GetCur		MACRO	PAGE
 		IFNB	<PAGE>
-		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
-			MOV	BH,PAGE
-		ELSE
-			ECHO Bad argument
-			.ERR
-		ENDIF
+			IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
+				MOV	BH,PAGE
+			ELSE
+				ECHO Bad argument
+				.ERR
+			ENDIF
 		ELSE
 			SUB	BH, BH
 		ENDIF
@@ -160,12 +160,12 @@
 
 @SetPage	MACRO	PAGE
 		IFNB	<PAGE>
-		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
-			MOV	AL,PAGE
-		ELSE
-			ECHO Bad argument
-			.ERR
-		ENDIF
+			IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
+				MOV	AL,PAGE
+			ELSE
+				ECHO Bad argument
+				.ERR
+			ENDIF
 		ELSE
 			SUB	AL, AL
 		ENDIF
@@ -179,16 +179,46 @@
 ;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:06
 ;
 
-@ScrollUp	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+@ScrollUp	MACRO	DISTANCE,ATTRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
 		PUSH	BP		; BIOS bug
 		PUSH	DS		; BIOS bug
-		MOV	CL,UPCOL
-		MOV	CH,UPROW
-		MOV	DL,DOWNCOL
-		MOV	DH,DOWNROW
-		MOV	BH,ATRIB
-		MOV	AL,DISTANCE
-		@VID	06H
+		IF TYPE (UPCOL) EQ 1	; BYTES (1 BYTE)
+			MOV	CL,UPCOL
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (UPROW) EQ 1	; BYTES (1 BYTE)
+			MOV	CH,UPROW
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (DOWNCOL) EQ 1	; BYTES (1 BYTE)
+			MOV	DL,DOWNCOL
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (DOWNROW) EQ 1	; BYTES (1 BYTE)
+			MOV	DH,DOWNROW
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (ATTRIB) EQ 1	; BYTES (1 BYTE)
+			MOV	BH,ATTRIB
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (ATTRIB) EQ 1	; BYTES (1 BYTE)
+			MOV	AX, 0600h+DISTANCE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		@VID	AX
 		POP	DS		; BIOS bug
 		POP	BP		; BIOS bug
 		ENDM
