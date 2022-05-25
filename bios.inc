@@ -24,9 +24,9 @@
 		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
 			MOV	AH,FUNC
 		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
-		IFDIFI	<FUNC>, <AX>
-			MOV	AX,FUNC
-		ENDIF
+			IFDIFI	<FUNC>, <AX>
+				MOV	AX,FUNC
+			ENDIF
 		ENDIF
 		INT	10H
 		ENDM
@@ -41,13 +41,13 @@
 @SetMode	MACRO	MODE
 		IFNB	<MODE>
 			IF TYPE (MODE) EQ 1	; BYTES (1 BYTE)
-				MOV	AX, WORD MODE
+				MOV	AX, 0000H+MODE
 			ELSE
 				ECHO Bad argument
 				.ERR
 			ENDIF
 		ELSE
-			MOV	AX, 2
+			MOV	AX, 3
 		ENDIF
 		@VID	AX
 		ENDM
@@ -161,15 +161,15 @@
 @SetPage	MACRO	PAGE
 		IFNB	<PAGE>
 			IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
-				MOV	AL,PAGE
+				MOV	AX, 0500H+PAGE
+				@VID	AX
 			ELSE
 				ECHO Bad argument
 				.ERR
 			ENDIF
 		ELSE
-			SUB	AL, AL
+			@VID	0500H
 		ENDIF
-		@VID	05H
 		ENDM
 
 ;-----------------------------------------------------------------------------
