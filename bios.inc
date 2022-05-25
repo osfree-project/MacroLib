@@ -230,16 +230,45 @@
 ;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:07
 ;
 
-@ScrollDn	MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
+@ScrollDn	MACRO	DISTANCE,ATTRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
 		PUSH	BP		; BIOS bug
 		PUSH	DS		; BIOS bug
-		MOV	CL,UPCOL
-		MOV	CH,UPROW
-		MOV	DL,DOWNCOL
-		MOV	DH,DOWNROW
-		MOV	BH,ATRIB
-		;MOV	AL,DISTANCE
-		MOV	AX, 0700H+DISTANCE
+		IF TYPE (UPCOL) EQ 1	; BYTES (1 BYTE)
+			MOV	CL,UPCOL
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (UPROW) EQ 1	; BYTES (1 BYTE)
+			MOV	CH,UPROW
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (DOWNCOL) EQ 1	; BYTES (1 BYTE)
+			MOV	DL,DOWNCOL
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (DOWNROW) EQ 1	; BYTES (1 BYTE)
+			MOV	DH,DOWNROW
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (ATTRIB) EQ 1	; BYTES (1 BYTE)
+			MOV	BH,ATTRIB
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (DISTANCE) EQ 1	; BYTES (1 BYTE)
+			MOV	AX, 0700H+DISTANCE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		@VID	AX
 		POP	DS		; BIOS bug
 		POP	BP		; BIOS bug
@@ -330,15 +359,30 @@
 ;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0A
 ;
 
-@PutCh		MACRO	CHAR,ATRIB,PAGE,REPEAT
+@PutCh		MACRO	CHAR,ATTRIB,PAGE,REPEAT
 		IFDIFI	<CHAR>, <AL>
+		IF TYPE (CHAR) EQ 1	; BYTES (1 BYTE)
 			MOV	AL,CHAR
+		ELSE
+			ECHO Bad argument
+			.ERR
 		ENDIF
-		IFNB	<ATRIB>
-			MOV	BL,ATRIB
+		ENDIF
+		IFNB	<ATTRIB>
+		IF TYPE (ATTRIB) EQ 1	; BYTES (1 BYTE)
+			MOV	BL,ATTRIB
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ENDIF
 		IFNB	<PAGE>
+		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
 			MOV	BH,PAGE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ELSE
 			SUB	BH, BH
 		ENDIF
@@ -393,7 +437,12 @@
 
 @SetDot		MACRO	COLOR, ROW, COL, PAGE
 		IFNB	<PAGE>
+		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
 			MOV	BH,PAGE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ELSE
 			SUB	BH, BH
 		ENDIF
@@ -412,7 +461,12 @@
 
 @GetDot		MACRO	COL, ROW, PAGE
 		IFNB	<PAGE>
+		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
 			MOV	BH,PAGE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ELSE
 			SUB	BH, BH
 		ENDIF
@@ -430,7 +484,12 @@
 
 @WrtTTY		MACRO	CHAR, PAGE
 		IFNB	<PAGE>
-			MOV	BH, PAGE
+		IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
+			MOV	BH,PAGE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ELSE
 			SUB	BH, BH
 		ENDIF
@@ -438,7 +497,12 @@
 		PUSH	DI		; BIOS bug
 		PUSH	BP		; BIOS bug
 		IFDIFI	<CHAR>, <AL>
+		IF TYPE (CHAR) EQ 1	; BYTES (1 BYTE)
 			MOV	AL, CHAR
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		ENDIF
 		@VID	0EH
 		POP	BP		; BIOS bug
@@ -555,7 +619,12 @@ COM		MACRO	FUNC
 
 @AuxInit	MACRO PORT, RATE
 		MOV	DX, PORT
-		MOV	AX, 0000H+RATE
+		IF TYPE (RATE) EQ 1	; BYTES (1 BYTE)
+			MOV	AX, 0000H+RATE
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		COM	AX
 		ENDM
 
@@ -577,7 +646,12 @@ COM		MACRO	FUNC
 
 @AuxSendChar	MACRO	PORT, CHAR
 		MOV	DX, PORT
-		MOV	AX, 0100H+CHAR
+		IF TYPE (CHAR) EQ 1	; BYTES (1 BYTE)
+			MOV	AX, 0100H+CHAR
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		COM	AX
 		ENDM
 
@@ -675,7 +749,12 @@ COM		MACRO	FUNC
 ;
 
 @PrnPrint	MACRO	PR, CHAR
-		MOV	AX, 0000H+CHAR
+		IF TYPE (CHAR) EQ 1	; BYTES (1 BYTE)
+			MOV	AX, 0000H+CHAR
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		MOV	DX, PR
 		PUSH	BX		; BIOS bug
 		@PRN	AX
@@ -785,11 +864,36 @@ COM		MACRO	FUNC
 ;
 ;
 @DskRead	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS, BUF
-		MOV	DL, DISK
-		MOV	DH, HEAD
-		MOV	CH, TRACK
-		MOV	CL, SECTOR
-		MOV	AX, 0200H+SECTS
+		IF TYPE (DISK) EQ 1	; BYTES (1 BYTE)
+			MOV	DL, DISK
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (HEAD) EQ 1	; BYTES (1 BYTE)
+			MOV	DH, HEAD
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (TRACK) EQ 1	; BYTES (1 BYTE)
+			MOV	CH, TRACK
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (SECTOR) EQ 1	; BYTES (1 BYTE)
+			MOV	CL, SECTOR
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (SECTS) EQ 1	; BYTES (1 BYTE)
+			MOV	AX, 0200H+SECTS
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		LES	BX, BUF
 		PUSH	DX		; BIOS bug
 		STC			; BIOS bug
@@ -805,11 +909,36 @@ COM		MACRO	FUNC
 ;
 
 @DskWrite	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS, BUF
-		MOV	DL, DISK
-		MOV	DH, HEAD
-		MOV	CH, TRACK
-		MOV	CL, SECTOR
-		MOV	AX, 0300H+SECTS
+		IF TYPE (DISK) EQ 1	; BYTES (1 BYTE)
+			MOV	DL, DISK
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (HEAD) EQ 1	; BYTES (1 BYTE)
+			MOV	DH, HEAD
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (TRACK) EQ 1	; BYTES (1 BYTE)
+			MOV	CH, TRACK
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (SECTOR) EQ 1	; BYTES (1 BYTE)
+			MOV	CL, SECTOR
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (SECTS) EQ 1	; BYTES (1 BYTE)
+			MOV	AX, 0300H+SECTS
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		LES	BX, BUF
 		@DSK	AX
 		ENDM
@@ -823,11 +952,36 @@ COM		MACRO	FUNC
 
 @DskVerify	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS
 		@DskReset		; BIOS bug
-		MOV	DL, DISK
-		MOV	DH, HEAD
-		MOV	CH, TRACK
-		MOV	CL, SECTOR
-		MOV	AX, 0400H+SECTS
+		IF TYPE (DISK) EQ 1	; BYTES (1 BYTE)
+			MOV	DL, DISK
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (HEAD) EQ 1	; BYTES (1 BYTE)
+			MOV	DH, HEAD
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (TRACK) EQ 1	; BYTES (1 BYTE)
+			MOV	CH, TRACK
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (SECTOR) EQ 1	; BYTES (1 BYTE)
+			MOV	CL, SECTOR
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (SECTS) EQ 1	; BYTES (1 BYTE)
+			MOV	AX, 0400H+SECTS
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		@DSK	AX
 		ENDM
 
@@ -838,9 +992,24 @@ COM		MACRO	FUNC
 ;
 
 @DskFormat	MACRO	DISK, HEAD, TRACK, BUF
-		MOV	DL, DISK
-		MOV	DH, HEAD
-		MOV	CH, TRACK
+		IF TYPE (DISK) EQ 1	; BYTES (1 BYTE)
+			MOV	DL, DISK
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (HEAD) EQ 1	; BYTES (1 BYTE)
+			MOV	DH, HEAD
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
+		IF TYPE (TRACK) EQ 1	; BYTES (1 BYTE)
+			MOV	CH, TRACK
+		ELSE
+			ECHO Bad argument
+			.ERR
+		ENDIF
 		LES	BX, BUF
 		@DSK	5
 		ENDM
