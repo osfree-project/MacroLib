@@ -247,7 +247,7 @@
 
 
 @Scroll		MACRO	DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
-		IF	distance LE 0
+		IF	DISTANCE LE 0
 			@ScrollUp -DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
 		ELSE
 			@ScrollDn DISTANCE,ATRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
@@ -399,8 +399,8 @@
 		ENDIF
 		MOV	DX, ROW
 		MOV	CX, COL
-		MOV	AL, COLOR
-		@VID	0CH
+		MOV	AX, 0C00H+COLOR
+		@VID	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -506,7 +506,15 @@
 		ENDM
 		
 COM		MACRO	FUNC
-		MOV	AH, FUNC
+		IF (.TYPE (FUNC)) AND 00000100b ; Constant
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
+		IFDIFI	<FUNC>, <AX>
+			MOV	AX,FUNC
+		ENDIF
+		ENDIF
 		INT	14H
 		ENDM
 
@@ -547,8 +555,8 @@ COM		MACRO	FUNC
 
 @AuxInit	MACRO PORT, RATE
 		MOV	DX, PORT
-		MOV	AL, RATE
-		COM	00H
+		MOV	AX, 0000H+RATE
+		COM	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -569,8 +577,8 @@ COM		MACRO	FUNC
 
 @AuxSendChar	MACRO	PORT, CHAR
 		MOV	DX, PORT
-		MOV	AL, CHAR
-		COM	01H
+		MOV	AX, 0100H+CHAR
+		COM	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -648,7 +656,15 @@ COM		MACRO	FUNC
 		ENDM
 
 @Prn		MACRO	FUNC
-		MOV	AH, FUNC
+		IF (.TYPE (FUNC)) AND 00000100b ; Constant
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
+		IFDIFI	<FUNC>, <AX>
+			MOV	AX,FUNC
+		ENDIF
+		ENDIF
 		INT	17H
 		ENDM
 
@@ -659,10 +675,10 @@ COM		MACRO	FUNC
 ;
 
 @PrnPrint	MACRO	PR, CHAR
-		MOV	AL, CHAR
+		MOV	AX, 0000H+CHAR
 		MOV	DX, PR
 		PUSH	BX		; BIOS bug
-		@PRN	0
+		@PRN	AX
 		POP	BX		; BIOS bug
 		ENDM
 
@@ -688,7 +704,15 @@ COM		MACRO	FUNC
 		ENDM
 
 @Kbd		MACRO	FUNC
-		MOV	AH, FUNC
+		IF (.TYPE (FUNC)) AND 00000100b ; Constant
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
+		IFDIFI	<FUNC>, <AX>
+			MOV	AX,FUNC
+		ENDIF
+		ENDIF
 		INT	16H
 		ENDM
 
@@ -723,7 +747,15 @@ COM		MACRO	FUNC
 		ENDM
 
 @Dsk		MACRO	FUNC
-		MOV	AH, FUNC
+		IF (.TYPE (FUNC)) AND 00000100b ; Constant
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
+		IFDIFI	<FUNC>, <AX>
+			MOV	AX,FUNC
+		ENDIF
+		ENDIF
 		INT	13H
 		ENDM
 
@@ -757,11 +789,11 @@ COM		MACRO	FUNC
 		MOV	DH, HEAD
 		MOV	CH, TRACK
 		MOV	CL, SECTOR
-		MOV	AL, SECTS
+		MOV	AX, 0200H+SECTS
 		LES	BX, BUF
 		PUSH	DX		; BIOS bug
 		STC			; BIOS bug
-		@DSK	2
+		@DSK	AX
 		STI			; BIOS bug
 		POP	DX		; BIOS bug
 		ENDM
@@ -777,9 +809,9 @@ COM		MACRO	FUNC
 		MOV	DH, HEAD
 		MOV	CH, TRACK
 		MOV	CL, SECTOR
-		MOV	AL, SECTS
+		MOV	AX, 0300H+SECTS
 		LES	BX, BUF
-		@DSK	3
+		@DSK	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -795,8 +827,8 @@ COM		MACRO	FUNC
 		MOV	DH, HEAD
 		MOV	CH, TRACK
 		MOV	CL, SECTOR
-		MOV	AL, SECTS
-		@DSK	4
+		MOV	AX, 0400H+SECTS
+		@DSK	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -834,7 +866,15 @@ COM		MACRO	FUNC
 
 
 @Tape		MACRO	FUNC
-		MOV	AH, FUNC
+		IF (.TYPE (FUNC)) AND 00000100b ; Constant
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
+			MOV	AH,FUNC
+		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
+		IFDIFI	<FUNC>, <AX>
+			MOV	AX,FUNC
+		ENDIF
+		ENDIF
 		INT	15H
 		ENDM
 
