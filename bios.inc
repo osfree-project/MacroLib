@@ -840,6 +840,60 @@ COM		MACRO	FUNC
 		@KBD	2
 		ENDM
 
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 09h    Get Keyboard functions
+;
+;
+
+@GetKbdFuncs	MACRO
+		@KBD	9
+		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 0Ah    Get Keyboard ID
+;
+;
+
+@GetKbdId	MACRO
+		@KBD	0AH
+		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 10h    Input char from keyboard (enhanced keyboard only)
+;
+;
+
+@CharInEnh	MACRO
+		@KBD	10H
+		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 11h    Peek char from keyboard buffer (enhanced keyboard only)
+;
+;
+
+@CharPeekEnh	MACRO
+		@KBD	11H
+		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 12h    Keyboard Status (enhanced keyboard only)
+;
+;
+
+@KbdStatusEnh	MACRO
+		@KBD	12H
+		ENDM
+
+
+;-----------------------------------------------------------------------------
+
 @Dsk		MACRO	FUNC
 		IF (.TYPE (FUNC)) AND 00000100b ; Constant
 			MOV	AH,FUNC
@@ -1101,6 +1155,16 @@ COM		MACRO	FUNC
 		LES	BX, BUF
 		MOV	CX, LEN
 		@TAPE	03H
+		ENDM
+
+
+;-----------------------------------------------------------------------------
+;
+;    AH = C0h    Get ROM Configuration table
+;
+;
+@GetROMConfig	MACRO
+		@TAPE	0C0H
 		ENDM
 
 ;-----------------------------------------------------------------------------
