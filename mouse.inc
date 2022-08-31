@@ -60,3 +60,17 @@
 		@mou	3
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AL = 10h    Mouse Cursor Region
+;
+;    Documentation: 
+;
+
+@MouRegion	MACRO UCX, UCY, LCX, LCY
+		MOV CX, UCX
+		MOV DX, UCY
+		MOV SI, LCX
+		MOV DI, LCY
+		@mou	010h
+		ENDM
