@@ -34,7 +34,7 @@
 ;    Documentation: 
 ;
 
-@MouInit	MACRO	MODE
+@MouInit	MACRO
 		@mou	0
 		ENDM
 
@@ -45,7 +45,7 @@
 ;    Documentation: 
 ;
 
-@MouShowPointer	MACRO	MODE
+@MouShowPointer	MACRO
 		@mou	1
 		ENDM
 
@@ -56,8 +56,34 @@
 ;    Documentation: 
 ;
 
-@MouStatus	MACRO	MODE
+@MouStatus	MACRO
 		@mou	3
+		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AL = 04h    Set Mouse Cursor Position
+;
+;    Documentation: 
+;
+
+@MouSetPos	MACRO	X, Y
+		MOV	CX, X
+		MOV	DX, Y
+		@mou	4
+		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AL = 0Fh    Set Mouse Mickey/Pixel ratio
+;
+;    Documentation: 
+;
+
+@MouSetMickey	MACRO	X, Y
+		MOV	CX, X
+		MOV	DX, Y
+		@mou	4
 		ENDM
 
 ;-----------------------------------------------------------------------------
