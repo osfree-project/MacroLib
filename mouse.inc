@@ -8,6 +8,8 @@
 ;
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
 ;
+;   This is macros for Mouse INT 33H. This file is new, not found in MASM or related assmblers
+;
 ;   Documentation: http://osfree.org/doku/en:docs:macrolib
 ;
 ;*/

@@ -1,3 +1,15 @@
+;/*!
+;   @file
+;
+;   @brief DPMI Macro Library
+;
+;   @author 
+;
+;   This is macros adopted from HX-DOS package
+;
+;   Documentation: http://osfree.org/doku/en:docs:macrolib
+;
+;*/
 
 ifndef DPMI_DEFINED
 

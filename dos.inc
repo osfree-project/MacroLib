@@ -10,6 +10,8 @@
 ;
 ;   This library based mostly on MASM 5.x and MASM 6.x documentation.
 ;
+;   Documentation: http://osfree.org/doku/en:docs:macrolib
+;
 ;*/
 
 
