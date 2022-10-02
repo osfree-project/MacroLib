@@ -13,6 +13,10 @@
 ;*/
 
 
+IFNDEF DOS_DEFINED
+
+DOS_DEFINED EQU 1
+
 .8086
 
 		INCLUDE	mac.inc
@@ -1352,3 +1356,5 @@ SET_BIT:
 			ENDIF
 		ENDIF
 		ENDM
+
+ENDIF

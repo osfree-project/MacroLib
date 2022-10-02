@@ -1,15 +1,7 @@
 
-;        pushcontext listing
-;        .xlist
-;        .xcref
-
 ifndef DPMI_DEFINED
 
 DPMI_DEFINED equ 1
-
-ifndef ?32BIT
-?32BIT = 0
-endif
 
 ;*** definitions DOS Protected Mode Interface ***
 

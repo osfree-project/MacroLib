@@ -18,7 +18,15 @@
 ;
 ;*/
 
-@vid		MACRO	FUNC
+IFNDEF BIOS_DEFINED
+
+BIOS_DEFINED EQU 1
+
+;=============================================================================
+; Video BIOS Interrupts
+;=============================================================================
+
+@VBIOS_CALL	MACRO	FUNC
 		IF (.TYPE (FUNC)) AND 00000100b ; Constant
 			MOV	AH,FUNC
 		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
@@ -37,7 +45,7 @@
 ;
 ;    AH = 00h    Set Video Mode
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:00
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:setmode
 ;
 
 @SetMode	MACRO	MODE
@@ -51,14 +59,14 @@
 		ELSE
 			MOV	AX, 3
 		ENDIF
-		@VID	AX
+		@VBIOS_CALL	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 01h    Set Cursor Shape Size
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:01
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:setcursz
 ;
 
 @SetCurSz	MACRO	FIRST,LAST
@@ -81,14 +89,14 @@
 		PUSH	BX		; BIOS bug
 		@GetMode		; BIOS bug
 		POP	BX		; BIOS bug
-		@VID	01H
+		@VBIOS_CALL	01H
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 02h    Set Cursor Position
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:02
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:setcurpos
 ;
 
 @SetCurPos	MACRO	COLUMN,ROW,PAGE
@@ -129,14 +137,14 @@
 		ELSE
 			SUB	BH, BH
 		ENDIF
-		@VID	02H
+		@VBIOS_CALL	02H
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 03h    Get Current Cursor Position and Size
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:03
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getcur
 ;
 
 @GetCur		MACRO	PAGE
@@ -150,27 +158,27 @@
 		ELSE
 			SUB	BH, BH
 		ENDIF
-		@VID	03H
+		@VBIOS_CALL	03H
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 05h    Set Active Video Page
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:05
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:setpage
 ;
 
 @SetPage	MACRO	PAGE
 		IFNB	<PAGE>
 			IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
 				MOV	AX, 0500H+PAGE
-				@VID	AX
+				@VBIOS_CALL	AX
 			ELSE
 				ECHO Bad argument
 				.ERR
 			ENDIF
 		ELSE
-			@VID	0500H
+			@VBIOS_CALL	0500H
 		ENDIF
 		ENDM
 
@@ -178,7 +186,7 @@
 ;
 ;    AH = 06h    Scroll Screen Area Up
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:06
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:scrollup
 ;
 
 @ScrollUp	MACRO	DISTANCE,ATTRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
@@ -220,7 +228,7 @@
 			ECHO Bad argument
 			.ERR
 		ENDIF
-		@VID	AX
+		@VBIOS_CALL	AX
 		POP	DS		; BIOS bug
 		POP	BP		; BIOS bug
 		ENDM
@@ -229,7 +237,7 @@
 ;
 ;    AH = 07h    Scroll Screen Area Down
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:07
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:scrolldn
 ;
 
 @ScrollDn	MACRO	DISTANCE,ATTRIB,UPCOL,UPROW,DOWNCOL,DOWNROW
@@ -284,7 +292,7 @@
 			ECHO Bad argument
 			.ERR
 		ENDIF
-		@VID	AX
+		@VBIOS_CALL	AX
 		POP	DS		; BIOS bug
 		POP	BP		; BIOS bug
 		ENDM
@@ -298,6 +306,13 @@
 		ENDIF
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    Clear Screen
+;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:cls
+;
+
 @Cls		MACRO
 		@Scroll 25,07h,0,0,79,24
 		@SetCurPos
@@ -306,7 +321,7 @@
 ;
 ;    AH = 08h    Get Character and Attribute
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:08
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getchatr
 ;
 
 @GetChAtr	MACRO	PAGE
@@ -323,7 +338,7 @@
 		ELSE
 			SUB	BH, BH
 		ENDIF
-		@VID	08H
+		@VBIOS_CALL	08H
 		POP	BP		; BIOS bug
 		POP	DI		; BIOS bug
 		POP	SI		; BIOS bug
@@ -333,7 +348,7 @@
 ;
 ;    AH = 09h    Print Char With Attribute
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:09
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:putchatr
 ;
 
 @PutChAtr	MACRO	CHAR,ATRIB,PAGE,REPEAT
@@ -364,14 +379,14 @@
 		IFDIFI	<REPEAT>,<CX>
 			MOV	CX,REPEAT
 		ENDIF
-		@VID	09H
+		@VBIOS_CALL	09H
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Ah    Print Char
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0A
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:putch
 ;
 
 @PutCh		MACRO	CHAR,ATTRIB,PAGE,REPEAT
@@ -404,14 +419,14 @@
 		IFDIFI	<REPEAT>, <CX>
 			MOV	CX,REPEAT
 		ENDIF
-		@VID	0AH
+		@VBIOS_CALL	0AH
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Bh    Set Palette
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0B
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:setpalet
 ;
 
 @SetPalet	MACRO	COLOR
@@ -422,14 +437,14 @@
 			ECHO Bad argument
 			.ERR
 		ENDIF
-		@VID	0BH
+		@VBIOS_CALL	0BH
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Bh    Set Color
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0B
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:setcolor
 ;
 
 @SetColor	MACRO	COLOR
@@ -440,14 +455,14 @@
 			ECHO Bad argument
 			.ERR
 		ENDIF
-		@VID	0BH
+		@VBIOS_CALL	0BH
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Ch    Draw Pixel
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0C
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:setdot
 ;
 
 @SetDot		MACRO	COLOR, ROW, COL, PAGE
@@ -464,14 +479,14 @@
 		MOV	DX, ROW
 		MOV	CX, COL
 		MOV	AX, 0C00H+COLOR
-		@VID	AX
+		@VBIOS_CALL	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Dh    Get Pixel
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0D
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getdot
 ;
 
 @GetDot		MACRO	COL, ROW, PAGE
@@ -487,14 +502,14 @@
 		ENDIF
 		MOV	DX, ROW
 		MOV	CX, COL
-		@VID	0DH
+		@VBIOS_CALL	0DH
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Eh    Write char in TTY mode
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0E
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:wrttty
 ;
 
 @WrtTTY		MACRO	CHAR, PAGE
@@ -519,7 +534,7 @@
 			.ERR
 		ENDIF
 		ENDIF
-		@VID	0EH
+		@VBIOS_CALL	0EH
 		POP	BP		; BIOS bug
 		POP	DI		; BIOS bug
 		POP	SI		; BIOS bug
@@ -529,53 +544,53 @@
 ;
 ;    AH = 0Fh    Return Video State
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0F
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:videostate
 ;
 
 @VideoState	MACRO
-		@VID	0FH
+		@VBIOS_CALL	0FH
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Fh    Get Current Video Mode
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:0F
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getmode
 ;
 
 @GetMode	MACRO
-		@VID	0Fh
+		@VBIOS_CALL	0Fh
 		ENDM
  
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 1Ah    Get Display Configuration
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:1A
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getdisplay
 ;
  
 @GetDisplay	MACRO
 		XOR	AX, AX
-		@VID	1Ah
+		@VBIOS_CALL	1Ah
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 1Ch    Get Display Configuration
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:1C
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getvideostate
 ;
 
 @GetVideoState	MACRO
 		XOR	AX, AX
-		@VID	1Ch
+		@VBIOS_CALL	1Ch
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 12h    Alternate functions
 ;
-;    Documentation: http://osfree.org/doku/en:docs:bios:api:int10:12
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getegainfo
 ;
 
 @GetEGAInfo	MACRO
@@ -583,8 +598,12 @@
 		MOV	BL,10H
 		INT	10H
 		ENDM
+
+;=============================================================================
+; Serial Port BIOS Interrupts
+;=============================================================================
 		
-COM		MACRO	FUNC
+@AUX_CALL	MACRO	FUNC
 		IF (.TYPE (FUNC)) AND 00000100b ; Constant
 			MOV	AH,FUNC
 		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
@@ -630,7 +649,8 @@ COM		MACRO	FUNC
 ;    Bits 1-0 character length:  1 0        7 bits
 ;                                1 1        8 bits
 ;
-;-----------------------------------------------------------------------------
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:auxinit
+;
 
 @AuxInit	MACRO PORT, RATE
 		MOV	DX, PORT
@@ -640,7 +660,7 @@ COM		MACRO	FUNC
 			ECHO Bad argument
 			.ERR
 		ENDIF
-		COM	AX
+		@AUX_CALL	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -657,7 +677,8 @@ COM		MACRO	FUNC
 ;    is room to store the character in the transmit buffer.  On return, AX is
 ;    set as in a status request (see function 03h).
 ;
-;-----------------------------------------------------------------------------
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:auxsendchar
+;
 
 @AuxSendChar	MACRO	PORT, CHAR
 		MOV	DX, PORT
@@ -667,7 +688,7 @@ COM		MACRO	FUNC
 			ECHO Bad argument
 			.ERR
 		ENDIF
-		COM	AX
+		@AUX_CALL	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -683,11 +704,12 @@ COM		MACRO	FUNC
 ;    the next character in AL.  It will wait until a character is received if
 ;    none is available.
 ;
-;-----------------------------------------------------------------------------
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:auxrecievechar
+;
 
 @AuxRecieveChar	MACRO	PORT
 		MOV	DX, PORT
-		COM	02H
+		@AUX_CALL	02H
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -737,14 +759,19 @@ COM		MACRO	FUNC
 ;    is always returned set to enable programs to use it as a carrier detect
 ;    bit on hardwired (null modem) links.
 ;
-;-----------------------------------------------------------------------------
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:auxstatus
+;
 
 @AuxStatus	MACRO	PORT
 		MOV	DX, PORT
-		COM	03H
+		@AUX_CALL	03H
 		ENDM
 
-@Prn		MACRO	FUNC
+;=============================================================================
+; Printer port BIOS Interrupts
+;=============================================================================
+
+@PRN_CALL	MACRO	FUNC
 		IF (.TYPE (FUNC)) AND 00000100b ; Constant
 			MOV	AH,FUNC
 		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
@@ -761,6 +788,7 @@ COM		MACRO	FUNC
 ;
 ;    AH = 00h    Print Char
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:prnprint
 ;
 
 @PrnPrint	MACRO	PR, CHAR
@@ -772,7 +800,7 @@ COM		MACRO	FUNC
 		ENDIF
 		MOV	DX, PR
 		PUSH	BX		; BIOS bug
-		@PRN	AX
+		@PRN_CALL	AX
 		POP	BX		; BIOS bug
 		ENDM
 
@@ -780,24 +808,31 @@ COM		MACRO	FUNC
 ;
 ;    AH = 01h    Initialize Printer
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:prninit
 ;
 
 @PrnInit	MACRO	PR
 		MOV	DX, PR
-		@PRN	1
+		@PRN_CALL	1
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 02h    Get printer status
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:prnstatus
 ;
+
 @PrnStatus	MACRO	PR
 		MOV	DX, PR
-		@PRN	2
+		@PRN_CALL	2
 		ENDM
 
-@Kbd		MACRO	FUNC
+;=============================================================================
+; Keyboard BIOS Interrupts
+;=============================================================================
+
+@KBD_CALL	MACRO	FUNC
 		IF (.TYPE (FUNC)) AND 00000100b ; Constant
 			MOV	AH,FUNC
 		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
@@ -814,30 +849,33 @@ COM		MACRO	FUNC
 ;
 ;    AH = 00h    Input char from keyboard
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:charin
 ;
 
 @CharIn		MACRO
-		@KBD	0
+		@KBD_CALL	0
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 01h    Peek char from keyboard buffer
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:charpeek
 ;
 
 @CharPeek	MACRO
-		@KBD	1
+		@KBD_CALL	1
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 02h    Keyboard Status
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:kbdstatus
 ;
 
 @KbdStatus	MACRO
-		@KBD	2
+		@KBD_CALL	2
 		ENDM
 
 
@@ -845,56 +883,63 @@ COM		MACRO	FUNC
 ;
 ;    AH = 09h    Get Keyboard functions
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getkbdfuncs
 ;
 
 @GetKbdFuncs	MACRO
-		@KBD	9
+		@KBD_CALL	9
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Ah    Get Keyboard ID
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getkbdid
 ;
 
 @GetKbdId	MACRO
-		@KBD	0AH
+		@KBD_CALL	0AH
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 10h    Input char from keyboard (enhanced keyboard only)
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:charinenh
 ;
 
 @CharInEnh	MACRO
-		@KBD	10H
+		@KBD_CALL	10H
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 11h    Peek char from keyboard buffer (enhanced keyboard only)
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:charpeekenh
 ;
 
 @CharPeekEnh	MACRO
-		@KBD	11H
+		@KBD_CALL	11H
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 12h    Keyboard Status (enhanced keyboard only)
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:kbdstatusenh
 ;
 
 @KbdStatusEnh	MACRO
-		@KBD	12H
+		@KBD_CALL	12H
 		ENDM
 
 
-;-----------------------------------------------------------------------------
+;=============================================================================
+; Disk I/O BIOS Interrupts
+;=============================================================================
 
-@Dsk		MACRO	FUNC
+@DSK_CALL	MACRO	FUNC
 		IF (.TYPE (FUNC)) AND 00000100b ; Constant
 			MOV	AH,FUNC
 		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
@@ -911,27 +956,31 @@ COM		MACRO	FUNC
 ;
 ;    AH = 00h    Reset disk
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:dskreset
 ;
 
-
 @DskReset	MACRO
-		@DSK	0
+		@DSK_CALL	0
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 01h    Get disk status
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:dskstatus
 ;
+
 @DskStatus	MACRO
-		@DSK	1
+		@DSK_CALL	1
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 02h    Read Sector
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:dskread
 ;
+
 @DskRead	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS, BUF
 		IF TYPE (DISK) EQ 1	; BYTES (1 BYTE)
 			MOV	DL, DISK
@@ -966,7 +1015,7 @@ COM		MACRO	FUNC
 		LES	BX, BUF
 		PUSH	DX		; BIOS bug
 		STC			; BIOS bug
-		@DSK	AX
+		@DSK_CALL	AX
 		STI			; BIOS bug
 		POP	DX		; BIOS bug
 		ENDM
@@ -975,6 +1024,7 @@ COM		MACRO	FUNC
 ;
 ;    AH = 03h    Write Sector
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:dskwrite
 ;
 
 @DskWrite	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS, BUF
@@ -1009,7 +1059,7 @@ COM		MACRO	FUNC
 			.ERR
 		ENDIF
 		LES	BX, BUF
-		@DSK	AX
+		@DSK_CALL	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -1017,6 +1067,8 @@ COM		MACRO	FUNC
 ;    AH = 04h    Verify disk sector
 ;
 ; @todo: old bioses expect also buffer
+;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:dskverify
 ;
 
 @DskVerify	MACRO	DISK, HEAD, TRACK, SECTOR, SECTS
@@ -1051,13 +1103,14 @@ COM		MACRO	FUNC
 			ECHO Bad argument
 			.ERR
 		ENDIF
-		@DSK	AX
+		@DSK_CALL	AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 05h    Format Track
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:formattrack
 ;
 
 @DskFormat	MACRO	DISK, HEAD, TRACK, BUF
@@ -1080,13 +1133,14 @@ COM		MACRO	FUNC
 			.ERR
 		ENDIF
 		LES	BX, BUF
-		@DSK	5
+		@DSK_CALL	5
 		ENDM
 
 ;-----------------------------------------------------------------------------
 ;
 ;    Return Memory Size
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:memsize
 ;
 
 @MemSize	MACRO
@@ -1097,7 +1151,9 @@ COM		MACRO	FUNC
 ;
 ;    Return Equipment Info 
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:equipment
 ;
+
 @Equipment	MACRO
 		INT	11H
 		ENDM
@@ -1120,6 +1176,7 @@ COM		MACRO	FUNC
 ;
 ;    AH = 00h    Turn Tape Motor On
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:tapeon
 ;
 
 @TapeOn		MACRO
@@ -1130,7 +1187,9 @@ COM		MACRO	FUNC
 ;
 ;    AH = 01h    Turn Tape Motor Off
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:tapeoff
 ;
+
 @TapeOff	MACRO
 		@TAPE	1H
 		ENDM
@@ -1139,7 +1198,9 @@ COM		MACRO	FUNC
 ;
 ;    AH = 02h    Read Block From Tape
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:taperead
 ;
+
 @TapeRead	MACRO BUF, LEN
 		LES	BX, BUF
 		MOV	CX, LEN
@@ -1150,7 +1211,9 @@ COM		MACRO	FUNC
 ;
 ;    AH = 03h    Write Block To Tape
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:tapewrite
 ;
+
 @TapeWrite	MACRO BUF, LEN
 		LES	BX, BUF
 		MOV	CX, LEN
@@ -1162,7 +1225,9 @@ COM		MACRO	FUNC
 ;
 ;    AH = C0h    Get ROM Configuration table
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getromconfig
 ;
+
 @GetROMConfig	MACRO
 		@TAPE	0C0H
 		ENDM
@@ -1171,6 +1236,7 @@ COM		MACRO	FUNC
 ;
 ;    AH = 00h    Get Current Time
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:gettime
 ;
 
 @GetTime	MACRO
@@ -1182,7 +1248,9 @@ COM		MACRO	FUNC
 ;
 ;    AH = 01h    Set Current Time
 ;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:settime
 ;
+
 @SetTime	MACRO	COUNT
 		MOV	CX, HIGHWORD COUNT
 		MOV	DX, LOWWORD COUNT
@@ -1190,3 +1258,4 @@ COM		MACRO	FUNC
 		INT	1AH
 		ENDM
 
+ENDIF

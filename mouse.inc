@@ -12,7 +12,11 @@
 ;
 ;*/
 
-@mou		MACRO	FUNC
+IFNDEF MOUSE_DEFINED
+
+MOUSE_DEFINED EQU 1
+
+@MOU_CALL	MACRO	FUNC
 		IF (.TYPE (FUNC)) AND 00000100b ; Constant
 			MOV	AX,FUNC
 		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
@@ -35,7 +39,7 @@
 ;
 
 @MouInit	MACRO
-		@mou	0
+		@MOU_CALL	0
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -46,7 +50,7 @@
 ;
 
 @MouShowPointer	MACRO
-		@mou	1
+		@MOU_CALL	1
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -57,7 +61,7 @@
 ;
 
 @MouStatus	MACRO
-		@mou	3
+		@MOU_CALL	3
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -70,7 +74,7 @@
 @MouSetPos	MACRO	X, Y
 		MOV	CX, X
 		MOV	DX, Y
-		@mou	4
+		@MOU_CALL	4
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -83,7 +87,7 @@
 @MouSetMickey	MACRO	X, Y
 		MOV	CX, X
 		MOV	DX, Y
-		@mou	4
+		@MOU_CALL	4
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -98,5 +102,7 @@
 		MOV DX, UCY
 		MOV SI, LCX
 		MOV DI, LCY
-		@mou	010h
+		@MOU_CALL	010h
 		ENDM
+
+ENDIF
