@@ -37,7 +37,7 @@ MOUSE_DEFINED EQU 1
 ;
 ;    AL = 00h    Init driver
 ;
-;    Documentation: 
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:mouinit
 ;
 
 @MouInit	MACRO
@@ -48,7 +48,7 @@ MOUSE_DEFINED EQU 1
 ;
 ;    AL = 01h    Show Mouse Cursor
 ;
-;    Documentation: 
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:moushowpointer
 ;
 
 @MouShowPointer	MACRO
@@ -59,7 +59,7 @@ MOUSE_DEFINED EQU 1
 ;
 ;    AL = 03h    Mouse Cursor Status
 ;
-;    Documentation: 
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:moustatus
 ;
 
 @MouStatus	MACRO
@@ -70,7 +70,7 @@ MOUSE_DEFINED EQU 1
 ;
 ;    AL = 04h    Set Mouse Cursor Position
 ;
-;    Documentation: 
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:mousetpos
 ;
 
 @MouSetPos	MACRO	X, Y
@@ -83,7 +83,7 @@ MOUSE_DEFINED EQU 1
 ;
 ;    AL = 0Fh    Set Mouse Mickey/Pixel ratio
 ;
-;    Documentation: 
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:mousetmickey
 ;
 
 @MouSetMickey	MACRO	X, Y
@@ -96,7 +96,7 @@ MOUSE_DEFINED EQU 1
 ;
 ;    AL = 10h    Mouse Cursor Region
 ;
-;    Documentation: 
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:mouregion
 ;
 
 @MouRegion	MACRO UCX, UCY, LCX, LCY
