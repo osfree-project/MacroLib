@@ -8,7 +8,7 @@
 ;
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
 ;
-;   This is macros for Mouse INT 33H. This file is new, not found in MASM or related assmblers
+;   This is macros for Mouse INT 33H. This file is new, not found in MASM or related assemblers
 ;
 ;   Documentation: http://osfree.org/doku/en:docs:macrolib
 ;
@@ -74,8 +74,12 @@ MOUSE_DEFINED EQU 1
 ;
 
 @MouSetPos	MACRO	X, Y
-		MOV	CX, X
-		MOV	DX, Y
+		IFDIFI	<X>, <CX>
+			MOV	CX, X
+		ENDIF
+		IFDIFI	<Y>, <DX>
+			MOV	DX, Y
+		ENDIF
 		@MOU_CALL	4
 		ENDM
 
@@ -87,8 +91,12 @@ MOUSE_DEFINED EQU 1
 ;
 
 @MouSetMickey	MACRO	X, Y
-		MOV	CX, X
-		MOV	DX, Y
+		IFDIFI	<X>, <CX>
+			MOV	CX, X
+		ENDIF
+		IFDIFI	<Y>, <DX>
+			MOV	DX, Y
+		ENDIF
 		@MOU_CALL	4
 		ENDM
 
@@ -100,10 +108,18 @@ MOUSE_DEFINED EQU 1
 ;
 
 @MouRegion	MACRO UCX, UCY, LCX, LCY
-		MOV CX, UCX
-		MOV DX, UCY
-		MOV SI, LCX
-		MOV DI, LCY
+		IFDIFI	<UCX>, <CX>
+			MOV	CX, X
+		ENDIF
+		IFDIFI	<UCY>, <DX>
+			MOV	DX, Y
+		ENDIF
+		IFDIFI	<LCX>, <SI>
+			MOV SI, LCX
+		ENDIF
+		IFDIFI	<LCY>, <DI>
+			MOV DI, LCY
+		ENDIF
 		@MOU_CALL	010h
 		ENDM
 
