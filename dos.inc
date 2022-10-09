@@ -23,6 +23,11 @@ DOS_DEFINED EQU 1
 
 		INCLUDE	mac.inc
 
+@DosCall	MACRO	FUNC
+		MOV	AH, FUNC
+		INT	21H
+		ENDM
+
 TERMINATE	MACRO
 		INT	20H
 		ENDM
@@ -923,10 +928,16 @@ ALLOCATE_MEMORY	MACRO	BYTES
 		INT	21H
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 48h    Allocate memory block
+;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:getblok
+;
+
 @GetBlok	MACRO	GRAPHS
-		MOV	AH,48H
 		MOV	BX, GRAPHS
-		INT	21H
+		@DosCall 48H
 		ENDM
 
 FREE_MEMORY	MACRO	SEG_ADDR
@@ -957,17 +968,23 @@ SET_BLOCK	MACRO	LAST_BYTE
 		MOV	BP,SP
 		ENDM
 
+;-----------------------------------------------------------------------------
+;
+;    AH = 4Ah    Modify memory block
+;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:modblok
+;
+
 @ModBlok	MACRO	GRAPHS, SEGMNT
+		MOV	BX, GRAPHS
 		IFNB	<SEGMNT>
 		MOV	AX, <SEGMNT>
 		MOV	ES, AX
 		ENDIF
-		MOV	BX, GRAPHS
-		MOV	AH,4AH
-		INT	21H
+		@DosCall 4AH
 		ENDM
 
-EXEC		MACRO	PATH,COMMAND,PARMS
+EXEC		MACRO	PATH, COMMAND, PARMS
 		MOV	DX,OFFSET PATH
 		MOV	BX,OFFSET PARMS
 		MOV	WORD PTR PARMS[02H],OFFSET COMMAND
@@ -1010,9 +1027,15 @@ EXEC_OVL	MACRO	PATH,PARMS,SEG_ADDR
 		ELSE
 		MOV	AL,3
 		ENDIF
-		MOV	AH,4BH
-		INT	21H
+		@DosCall 4BH
 		ENDM
+
+;-----------------------------------------------------------------------------
+;
+;    AH = 4Ch    Terminate program
+;
+;    Documentation: http://osfree.org/doku/en:docs:macrolib:exit
+;
 
 @Exit		MACRO	RETURN
 		IF (.TYPE (RETURN)) AND 00000100b ; Constant
@@ -1056,10 +1079,13 @@ FIND_FIRST_FILE	MACRO	PATH,ATTRIB
 		MOV	AX, SEGMNT
 		MOV	DS, AX
 		ENDIF
-		MOV	DX,OFFSET PATH
-		MOV	CX,ATTRIB
-		MOV	AH,4EH
-		INT	21H
+		MOV	DX, OFFSET PATH
+		IFNB	<ATTRIB>
+			MOV	CX, ATTRIB
+		ELSE
+			XOR	CX, CX
+		ENDIF
+		@DosCall 4EH
 		ENDM
 
 FIND_NEXT_FILE	MACRO
