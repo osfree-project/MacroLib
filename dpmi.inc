@@ -120,7 +120,9 @@ DPMI_SetAccRights equ 9
 
 @DPMI_AllocDesc macro xx      ;allocate descriptor
         ifnb <xx>
-          mov cx,xx
+          ifdifi <xx>, <cx>
+            mov cx,xx
+          endif
         else
           mov cx,1
         endif
@@ -129,7 +131,9 @@ DPMI_SetAccRights equ 9
 
 @DPMI_FreeDesc macro xx      ;free descriptor
         ifnb <xx>
-          mov bx,xx
+          ifdifi <xx>, <bx>
+            mov bx,xx
+          endif
         endif
         @DpmiCall DPMI_FreeDesc
         endm
@@ -215,7 +219,9 @@ DPMI_SetAccRights equ 9
         endm
 
 @DPMI_DOSFREE macro selektor  ;free DOS memory block
-        mov dx,selektor
+        ifnb <selector>
+          mov dx,selektor
+	endif
         @DpmiCall 0101h
         endm
 
