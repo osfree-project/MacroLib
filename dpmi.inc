@@ -189,7 +189,9 @@ DPMI_SetAccRights equ 9
         endm
 
 @DPMI_CreateCSAlias macro selector  ;create code segment alias descriptor
-        mov bx,selector
+        ifnb <selector>
+          mov bx,selector
+        endif
         @DpmiCall 000Ah
         endm
 
