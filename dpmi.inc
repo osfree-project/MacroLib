@@ -139,7 +139,9 @@ DPMI_SetAccRights equ 9
         endm
 
 @DPMI_Seg2Desc macro segment_  ;segment to descriptor
-        move bx,segment_
+	ifnb <segment_>
+		move bx,segment_
+	endif
         @DpmiCall 0002h
         endm
 
