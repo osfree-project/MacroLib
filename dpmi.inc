@@ -229,12 +229,12 @@ DPMI_SetAccRights equ 9
         @DpmiCall 0101h
         endm
 
-@DPMI_DOSSIZE macro selektor, para  ;free DOS memory block
-        ifnb <selector>
-          mov dx,selektor
+@DPMI_DOSSIZE macro selektor,parag  ;resize DOS memory block
+        ifnb <selektor>
+          mov dx, selektor
 	endif
-        ifnb <para>
-          mov bx,para
+        ifnb <parag>
+          mov bx, parag
 	endif
         @DpmiCall 0102h
         endm
