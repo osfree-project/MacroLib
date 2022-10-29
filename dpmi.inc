@@ -229,6 +229,16 @@ DPMI_SetAccRights equ 9
         @DpmiCall 0101h
         endm
 
+@DPMI_DOSSIZE macro selektor, para  ;free DOS memory block
+        ifnb <selector>
+          mov dx,selektor
+	endif
+        ifnb <para>
+          mov bx,para
+	endif
+        @DpmiCall 0102h
+        endm
+
 @DPMI_GetRMIntVec macro xx    ;get realmode interrupt vector in CX:DX
 ifnb <xx>
         mov bl,xx
@@ -314,6 +324,10 @@ endif
         endm
 
 @DPMI_FREEMEM macro           ;free memory handle in SI:DI
+        @DpmiCall 0502h
+        endm
+
+@DPMI_SIZE macro           ;refree memory handle in SI:DI
         @DpmiCall 0502h
         endm
 
