@@ -54,12 +54,8 @@ BIOS_DEFINED EQU 1
 
 @SetMode	MACRO	MODE
 		IFNB	<MODE>
-			IF TYPE (MODE) EQ 1	; BYTES (1 BYTE)
-				MOV	AX, 0000H+MODE
-			ELSE
-				ECHO Bad argument
-				.ERR
-			ENDIF
+			xor     ax,ax
+			mov     al,mode
 		ELSE
 			MOV	AX, 3
 		ENDIF
