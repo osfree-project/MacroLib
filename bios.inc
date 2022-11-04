@@ -27,10 +27,10 @@ BIOS_DEFINED EQU 1
 ;=============================================================================
 
 @VBIOS_CALL	MACRO	FUNC
-		IF (.TYPE (FUNC)) AND 00000100b ; Constant
-			IF TYPE (FUNC) EQ 1
+		IF .TYPE (FUNC) EQ 24 ; Immediate
+			IF FUNC LT 100H	; BYTE
 				MOV	AH,FUNC
-			ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
+			ELSE		; WORD
 				MOV	AX,FUNC
 			ENDIF
 		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
