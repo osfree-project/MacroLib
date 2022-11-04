@@ -27,20 +27,40 @@ BIOS_DEFINED EQU 1
 ;=============================================================================
 
 @VBIOS_CALL	MACRO	FUNC
-		IF .TYPE (FUNC) EQ 24 ; Immediate
+;		IF (OPATTR (FUNC)) AND 00010000B ;; Register
+;IFDIFI FUNC, ax ;; Don’t load register
+;mov AX, FUNC ;; onto itself
+;ENDIF
+;ELSEIF (OPATTR (adr)) AND 00000100B
+;mov reg, adr ;; Constant
+;ELSEIF (TYPE (adr) EQ BYTE) OR (TYPE (adr) EQ SBYTE)
+;mov reg, OFFSET adr ;; Bytes
+;ELSEIF (SIZE (TYPE (adr)) EQ 2
+;mov reg, adr ;; Near pointer
+;ELSEIF (SIZE (TYPE (adr)) EQ 4
+;mov reg, WORD PTR adr[0] ;; Far pointer
+;mov ds, WORD PTR adr[2]
+;ELSE
+;.ERR <Illegal argument>
+;ENDIF
+;a=OPATTR(FUNC)
+;		IF .TYPE (FUNC) EQ 24 ; Immediate
+		IF (OPATTR (FUNC)) AND 00000100B ; Constant
 			IF FUNC LT 100H	; BYTE
 				MOV	AH,FUNC
 			ELSE		; WORD
 				MOV	AX,FUNC
 			ENDIF
-		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
+		ELSEIF (OPATTR (FUNC)) AND 00010000B ; Register
+			IF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
 			MOV	AH,FUNC
-		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
-			IFDIFI	<FUNC>, <AX>
-				MOV	AX,FUNC
+			ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
+				IFDIFI	<FUNC>, <AX>
+					MOV	AX,FUNC
+				ENDIF
 			ENDIF
 		ELSE
-			.ERR Unsupported argument type
+			.ERR 1 Unsupported argument type
 		ENDIF
 		INT	10H
 		ENDM

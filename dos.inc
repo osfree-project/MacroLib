@@ -24,20 +24,22 @@ DOS_DEFINED EQU 1
 		INCLUDE	mac.inc
 
 @DosCall	MACRO	FUNC
-		IF .TYPE (FUNC) EQ 24 ; Immediate
+		IF (OPATTR (FUNC)) AND 00000100B ; Constant
 			IF FUNC LT 100H	; BYTE
 				MOV	AH,FUNC
 			ELSE		; WORD
 				MOV	AX,FUNC
 			ENDIF
-		ELSEIF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
+		ELSEIF (OPATTR (FUNC)) AND 00010000B ; Register
+			IF TYPE (FUNC) EQ 1	; BYTES (1 BYTE)
 			MOV	AH,FUNC
-		ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
-			IFDIFI	<FUNC>, <AX>
-				MOV	AX,FUNC
+			ELSEIF TYPE (FUNC) EQ 2	; WORD (2 BYTE)
+				IFDIFI	<FUNC>, <AX>
+					MOV	AX,FUNC
+				ENDIF
 			ENDIF
 		ELSE
-			.ERR Unsupported argument type
+			.ERR 1 Unsupported argument type
 		ENDIF
 		INT	21H
 		ENDM
