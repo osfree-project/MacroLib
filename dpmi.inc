@@ -343,5 +343,50 @@ endif
         @DpmiCall 0800h
         endm
 
+;INT 2F - DOS Protected-Mode Interface - INSTALLATION CHECK
+;
+;	AX = 1687h
+;Return: AX = 0000h if installed
+;	    BX = flags
+;		bit 0: 32-bit programs supported
+;	    CL = processor type (02h=80286, 03h=80386, 04h=80486)
+;	    DH = DPMI major version
+;	    DL = two-digit DPMI minor version (binary)
+;	    SI = number of paragraphs of DOS extender private data
+;	    ES:DI -> DPMI mode-switch entry point (see #02718)
+;	AX nonzero if not installed
+;SeeAlso: AX=1686h,AX=43E0h,AX=DE01h/BX=4450h,AX=FB42h/BX=0001h
+;SeeAlso: INT 31/AX=0400h,INT 31/AX=5702h,INT D4/AH=10h
+;
+
+@DPMI_SwitchEntry macro
+	mov	ax, 1687h
+	int	2fh
+	endm
+
+;INT 2F - DPMI 0.9+ - GET VENDOR-SPECIFIC API ENTRY POINT
+;
+;	AX = 168Ah
+;	DS:(E)SI = selector:offset of ASCIZ vendor name (see #02719)
+;Return: AL = status
+;	    00h successful
+;	       ES:(E)DI -> extended API entry point
+;	    8Ah unsuccessful
+;Notes:	the vendor name is used to determine which entry point to return; it is
+;	  case-sensitive
+;	available in protected mode only
+;	32-bit applications use ESI and EDI, 16-bit applications use SI and DI
+;	this call is present but not documented for DPMI 0.9
+;	the Borland C++ 3.1 DPMILOAD does not handle requests for entry points
+;	  other than the MS-DOS one gracefully, producing an unhandled
+;	  exception report; this has been fixed in the Borland Pascal 7 version
+;SeeAlso: AX=1687h,INT 31/AX=0A00h,INT 31/AH=57h
+
+@DPMI_VendorEntry macro vendor
+	mov	si,offset vendor
+	mov	ax, 168ah
+	int	2fh
+	endm
+
 ;        popcontext listing
 endif

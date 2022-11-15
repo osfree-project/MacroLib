@@ -21,19 +21,25 @@
 		ENDIF
 		ENDM
 
+@PUSHC		MACRO op				;; 80186 or higher
+			IF  @Cpu AND 00000010B
+		            push op
+			ELSE			    	;; 8088/8086
+		            mov  ax, op
+		            push ax
+			ENDIF
+		ENDM
+
 @PUSHW		MACRO	ARG
-		MOV		AX,ARG
-		PUSH	AX
+			@PUSHC	ARG
 		ENDM
 
 @PUSHS		MACRO	ARG
 		.ERRB	<ARG>
 		a=.type ARG
 		IF (A EQ 62h)
-			MOV	AX, WORD PTR ARG
-			PUSH	AX
-			MOV	AX, WORD PTR ARG+2
-			PUSH	AX
+			@PUSHC	WORD PTR ARG
+			@PUSHC	WORD PTR ARG+2
 		else
 			MOV		AX,SEG ARG
 			PUSH	AX
@@ -45,10 +51,8 @@
 @PUSHD		MACRO	ARG
 		.ERRB	<ARG>
 		IF(OPATTR(ARG) EQ 35h)	; Immediate and defined
-			MOV	AX, LOWWORD ARG
-			PUSH	AX
-			MOV	AX, HIGHWORD ARG
-			PUSH	AX
+			@PUSHC	LOWWORD ARG
+			@PUSHC	HIGHWORD ARG
 		ELSE
 			PUSH	DS		;SAVE DATA SEGMENT
 			PUSH	BX		;SAVE CURRENT BX VALUE
