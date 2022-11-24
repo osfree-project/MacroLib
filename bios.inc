@@ -27,24 +27,6 @@ BIOS_DEFINED EQU 1
 ;=============================================================================
 
 @VBIOS_CALL	MACRO	FUNC
-;		IF (OPATTR (FUNC)) AND 00010000B ;; Register
-;IFDIFI FUNC, ax ;; Don’t load register
-;mov AX, FUNC ;; onto itself
-;ENDIF
-;ELSEIF (OPATTR (adr)) AND 00000100B
-;mov reg, adr ;; Constant
-;ELSEIF (TYPE (adr) EQ BYTE) OR (TYPE (adr) EQ SBYTE)
-;mov reg, OFFSET adr ;; Bytes
-;ELSEIF (SIZE (TYPE (adr)) EQ 2
-;mov reg, adr ;; Near pointer
-;ELSEIF (SIZE (TYPE (adr)) EQ 4
-;mov reg, WORD PTR adr[0] ;; Far pointer
-;mov ds, WORD PTR adr[2]
-;ELSE
-;.ERR <Illegal argument>
-;ENDIF
-;a=OPATTR(FUNC)
-;		IF .TYPE (FUNC) EQ 24 ; Immediate
 		IF (OPATTR (FUNC)) AND 00000100B ; Constant
 			IF FUNC LT 100H	; BYTE
 				MOV	AH,FUNC
@@ -112,6 +94,11 @@ BIOS_DEFINED EQU 1
 		@VBIOS_CALL	01H
 		ENDM
 
+@SetCsrSize	MACRO	FIRST,LAST
+		@SetCurSz	FIRST,LAST
+		ENDM
+
+
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 02h    Set Cursor Position
@@ -160,6 +147,10 @@ BIOS_DEFINED EQU 1
 		@VBIOS_CALL	02H
 		ENDM
 
+@SetCsrPos	MACRO	COLUMN,ROW,PAGE
+		@SetCurPos	COLUMN,ROW,PAGE
+		ENDM
+		
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 03h    Get Current Cursor Position and Size
@@ -167,7 +158,7 @@ BIOS_DEFINED EQU 1
 ;    Documentation: http://osfree.org/doku/en:docs:macrolib:getcur
 ;
 
-@GetCur		MACRO	PAGE
+@GetCur	MACRO	PAGE
 		IFNB	<PAGE>
 			IF TYPE (PAGE) EQ 1	; BYTES (1 BYTE)
 				MOV	BH,PAGE
@@ -179,6 +170,10 @@ BIOS_DEFINED EQU 1
 			SUB	BH, BH
 		ENDIF
 		@VBIOS_CALL	03H
+		ENDM
+
+@GetCsr	MACRO	PAGE
+		@GetCur PAGE
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -333,7 +328,7 @@ BIOS_DEFINED EQU 1
 ;    Documentation: http://osfree.org/doku/en:docs:macrolib:cls
 ;
 
-@Cls		MACRO
+@Cls	MACRO
 		@Scroll 25,07h,0,0,79,24
 		@SetCurPos
 		ENDM
@@ -364,6 +359,9 @@ BIOS_DEFINED EQU 1
 		POP	SI		; BIOS bug
 		ENDM
 
+@GetCharAtr	MACRO	PAGE
+		@GetChAtr	PAGE
+		ENDM
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 09h    Print Char With Attribute
@@ -400,6 +398,10 @@ BIOS_DEFINED EQU 1
 			MOV	CX,REPEAT
 		ENDIF
 		@VBIOS_CALL	09H
+		ENDM
+
+@PutCharAtr	MACRO	CHAR,ATRIB,PAGE,REPEAT
+		@PutChAtr	CHAR,ATRIB,PAGE,REPEAT
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -442,6 +444,9 @@ BIOS_DEFINED EQU 1
 		@VBIOS_CALL	0AH
 		ENDM
 
+@PutChar	MACRO	CHAR,ATTRIB,PAGE,REPEAT
+		@PutCh	CHAR,ATTRIB,PAGE,REPEAT
+		ENDM
 ;-----------------------------------------------------------------------------
 ;
 ;    AH = 0Bh    Set Palette
@@ -458,6 +463,10 @@ BIOS_DEFINED EQU 1
 			.ERR
 		ENDIF
 		@VBIOS_CALL	0BH
+		ENDM
+
+@SetPalette	MACRO	COLOR
+		@SetPalet COLOR
 		ENDM
 
 ;-----------------------------------------------------------------------------
