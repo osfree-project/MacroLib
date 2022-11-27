@@ -343,6 +343,10 @@ endif
         @DpmiCall 0800h
         endm
 
+@DPMI_DisableInt macro
+	@DpmiCall 0900h
+	endm
+
 ;INT 2F - DOS Protected-Mode Interface - INSTALLATION CHECK
 ;
 ;	AX = 1687h
