@@ -21,7 +21,7 @@ DOS_DEFINED EQU 1
 
 .8086
 
-		INCLUDE	mac.inc
+		INCLUDE	sysmaca.inc
 
 @DosCall	MACRO	FUNC
 		IF (OPATTR (FUNC)) AND 00000100B ; Constant

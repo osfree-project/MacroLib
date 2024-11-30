@@ -66,8 +66,8 @@ regpushed TEXTEQU <>                    ;; Initialize empty string
         regpushed CATSTR regpushed, <!>>    ;; Mark end with >
     ENDM
 
-  ; RestoreRegs - Macro to generate a pop instruction for registers
-    ; saved by the SaveRegs macro. Restores one group of registers.
+; RestoreRegs - Macro to generate a pop instruction for registers
+; saved by the SaveRegs macro. Restores one group of registers.
 
 @RestoreRegs MACRO
         LOCAL regs
@@ -113,4 +113,21 @@ ENDM
         pop cx
         pop ax
     ENDIF
+ENDM
+
+@PushC MACRO op				
+    IF  @Cpu AND 00000010B		;; 80186 or higher
+      push op
+    ELSE			    	;; 8088/8086
+      IF (OPATTR (adr)) AND 00000100B	;; Constant
+        mov  ax, op
+        push ax
+      ELSE
+        push op
+      ENDIF
+    ENDIF
+ENDM
+
+pushc MACRO op
+    @PushC op
 ENDM

@@ -9,7 +9,7 @@
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
 ;
 ;   This library based on IBM 5150 Technical Reference #6322507 of Apr 1984, MACRO.DOC from MASM 5.x,
-;   Ralf Brown Interrupt list.
+;   Ralf Brown Interrupt list. Some enhancements also here.
 ;
 ;   Functions, found in later BIOSes mostly not covered, but can be added in future. Macro names mostly constructed
 ;   from MASM 5.x, MASM 6.x and ALP documentation.
@@ -56,10 +56,9 @@ BIOS_DEFINED EQU 1
 
 @SetMode	MACRO	MODE
 		IFNB	<MODE>
-			xor     ax,ax
-			mov     al,mode
+		MOV     AX, MODE
 		ELSE
-			MOV	AX, 3
+		MOV	AX, 3
 		ENDIF
 		@VBIOS_CALL	AX
 		ENDM

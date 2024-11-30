@@ -11,9 +11,14 @@
 ;   This is Family API implementation for DOS, used with BIND tools
 ;   to link required API
 ;
+;   This is small subset of OS/2 API macros which was shipped with IBM Macro Assembler/2 1.0
+;   Full subset can be found in OS/2 Developer's Toolkit (sysmac.inc/doscalls.inc/subcalls.inc)
+;
 ;   @author Yuri Prokushev (yuri.prokushev@gmail.com)
 ;
 ;*/
+
+		INCLUDE MACROS.INC
 
 @DEFINE		MACRO	CALLNAME
 		IFNDEF	CALLNAME
@@ -21,14 +26,6 @@
 		ENDIF
 		ENDM
 
-@PUSHC		MACRO op				;; 80186 or higher
-			IF  @Cpu AND 00000010B
-		            push op
-			ELSE			    	;; 8088/8086
-		            mov  ax, op
-		            push ax
-			ENDIF
-		ENDM
 
 @PUSHW		MACRO	ARG
 			@PUSHC	ARG
@@ -85,4 +82,78 @@
 			ECHO Bad argument
 			.ERR
 		ENDIF
+		ENDM
+
+
+@VioScrollUp	MACRO	top,left,bottom,right,lines,cell,handle
+			@DEFINE  VioScrollUp
+			@PUSHW	top
+			@PUSHW	left
+			@PUSHW	bottom
+			@PUSHW	right
+			@PUSHW	lines
+			@PUSHS	cell
+			@PUSHW	handle
+			CALL	FAR PT VioScrollUp
+		ENDM
+
+@VioSetCurPos	MACRO	row,column,handle
+			@DEFINE	VioSetCurPos
+			@PUSHW  row
+			@PUSHW	column
+			@PUSHW   handle
+			CALL	FAR PTR VioSetCurPos
+		ENDM
+
+@KbdStringIn	MACRO	buffer,bufflng,iowait,handle
+			@DEFINE	KbdStringIn
+			@PUSHS	buffer
+			@PUSHS	bufflng
+			@PUSHW	iowait
+			@PUSHW	handle
+			CALL	FAR PTR KbdStringIn
+		ENDM
+
+@DosOpen	MACRO	name,handle,action,size,attrib,flag,mode,rsrvd
+			@DEFINE	DosOpen
+			@PUSHS	name
+			@PUSHS	handle
+			@PUSHS	action
+		 	@PUSHD	size
+			@PUSHW	attrib
+			@PUSHW	flag
+			@PUSHW	mode
+			@PUSHD	rsrvd
+			CALL	FAR PTR DosOpen
+		ENDM
+
+@DosRead	MACRO	handle,buffer,bufflng,read
+			@DEFINE	DosRead
+			@PUSHW	handle
+			@PUSHS	buffer
+			@PUSHW	bufflng
+			@PUSHS	read
+			CALL	FAR PTR DosRead
+		ENDM
+
+@DosWrite	MACRO	handle,buffer,bufflng,write
+			@DEFIN	DosWrite
+			@PUSHW	handle
+			@PUSHS	buffer
+			@PUSHW	bufflng
+			@PUSHS	write
+			CALL	FAR PTR	DosWrite
+		ENDM
+
+@DosClose	MACRO	handle
+			@DEFINE DosClose
+			@PUSHW	handle
+			CALL FAR PTR DosClose
+		ENDM
+
+@DosExit	MACRO	action,result
+			@DEFINE DosExit
+			@PUSHW	action
+			@PUSHW	result
+			CALL	FAR PTR DosExit
 		ENDM

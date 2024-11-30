@@ -23,6 +23,7 @@ START:
 	MOV	DS, AX
 	ASSUME DS:_DATA
 
+	@SetMode 3
 	@Cls
 	@DispStr Welcome
 
