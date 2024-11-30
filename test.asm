@@ -24,6 +24,7 @@ START:
 	ASSUME DS:_DATA
 
 	@SetMode 3
+	@SetMode [tst]
 	@Cls
 	@DispStr Welcome
 
@@ -50,6 +51,10 @@ START:
 
 	; MASM 6.x style
 	END_PROCESS 0
+
+
+;;;;;;;;;;;;;;;;;
+tst	db	?
 _TEXT	ENDS
 
 	END	START

@@ -1,1 +1,1 @@
-jwasm -mz -Zm -Fl test.asm
+jwasm -mz -Zne -Fl test.asm
