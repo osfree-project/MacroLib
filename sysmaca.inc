@@ -94,7 +94,7 @@
 			@PUSHW	lines
 			@PUSHS	cell
 			@PUSHW	handle
-			CALL	FAR PT VioScrollUp
+			CALL	FAR PTR VioScrollUp
 		ENDM
 
 @VioSetCurPos	MACRO	row,column,handle
