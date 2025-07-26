@@ -1670,9 +1670,8 @@ MOVE_PTR	MACRO	HANDLE,HIGH,LOW,METHOD
 ;-----------------------------------------------------------------------------
 CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
 		LDS	DX,PATH
-		MOV	AL,ACTION
 		MOV	CX,ATTRIB
-		@DosCall 43H
+		@DosCall 4300H + ACTION
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -1690,15 +1689,20 @@ LFN_CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
 		@DosCall 7143H
 		ENDM
 
+;-----------------------------------------------------------------------------
+; @VdmChangeMode - Universal change attributes (detects LFN support)
+; Input: Same as CHANGE_MODE
+;   Reference: http://osfree.org/doku/en:docs:macrolib:vdmchangemode
+;-----------------------------------------------------------------------------
 @VdmChangeMode	MACRO	PATH, ACTION, ATTRIB
-		LOCAL	EXIT
+		MOV	CX,ATTRIB
+		LDS	DX,PATH
+		MOV	AX, 4300H + ACTION
 		CMP	LFNAPI, 0FFFFH
-		JZ	@F
-		CHANGE_MODE PATH,ACTION,ATTRIB
-		JMP	EXIT
-@@:
-		LFN_CHANGE_MODE	PATH,ACTION,ATTRIB
-EXIT:
+		JNE	@F
+		MOV	BL, ACTION
+		MOV	AX, 7143H
+@@:		@DosCall AX
 		ENDM
 
 ;-----------------------------------------------------------------------------
