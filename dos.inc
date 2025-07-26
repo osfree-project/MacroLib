@@ -1283,7 +1283,7 @@ CHANGE_DIR	MACRO	PATH
 		MOV	AX, <SEGMNT>
 		MOV	DS, AX
 		ENDIF
-		@DosCall 3BH
+		@DosCall 03BH
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -1297,7 +1297,7 @@ CHANGE_DIR	MACRO	PATH
 LFN_CHANGE_DIR	MACRO	PATH
 		LDS	DX, PATH
 		STC
-		@DosCall 713BH
+		@DosCall 0713BH
 		ENDM
 
 ;-----------------------------------------------------------------------------
@@ -1305,14 +1305,14 @@ LFN_CHANGE_DIR	MACRO	PATH
 ; Input: PATH - Directory path
 ;-----------------------------------------------------------------------------
 @VdmChDir	MACRO	PATH
-		LOCAL	EXIT
+		LDS	DX, PATH
+		MOV	AX, 03B00H
 		CMP	LFNAPI, 0FFFFH
-		JZ	@F
-		CHANGE_DIR [DS:BP].ARGS.DIRNAME
-		JMP	EXIT
+		JNE	@F
+		MOV	AX, 0713BH
+		STC
 @@:
-		LFN_CHANGE_DIR [DS:BP].ARGS.DIRNAME
-EXIT:
+		@DosCall AX
 		ENDM
 		
 ;-----------------------------------------------------------------------------
@@ -1690,6 +1690,7 @@ LFN_CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
 		IFNB	<ATTRIB>
 			MOV	CX,ATTRIB
 		ENDIF
+		STC
 		@DosCall 7143H
 		ENDM
 
@@ -1708,6 +1709,7 @@ LFN_CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
 		JNE	@F
 		MOV	BL, ACTION
 		MOV	AX, 7143H
+		STC
 @@:		@DosCall AX
 		ENDM
 
