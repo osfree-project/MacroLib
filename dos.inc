@@ -1670,7 +1670,9 @@ MOVE_PTR	MACRO	HANDLE,HIGH,LOW,METHOD
 ;-----------------------------------------------------------------------------
 CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
 		LDS	DX,PATH
-		MOV	CX,ATTRIB
+		IFNB	<ATTRIB>
+			MOV	CX,ATTRIB
+		ENDIF
 		@DosCall 4300H + ACTION
 		ENDM
 
@@ -1685,7 +1687,9 @@ CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
 LFN_CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
 		LDS	DX,PATH
 		MOV	BL,ACTION
-		MOV	CX,ATTRIB
+		IFNB	<ATTRIB>
+			MOV	CX,ATTRIB
+		ENDIF
 		@DosCall 7143H
 		ENDM
 
@@ -1695,7 +1699,9 @@ LFN_CHANGE_MODE	MACRO	PATH,ACTION,ATTRIB
 ;   Reference: http://osfree.org/doku/en:docs:macrolib:vdmchangemode
 ;-----------------------------------------------------------------------------
 @VdmChangeMode	MACRO	PATH, ACTION, ATTRIB
-		MOV	CX,ATTRIB
+		IFNB	<ATTRIB>
+			MOV	CX,ATTRIB
+		ENDIF
 		LDS	DX,PATH
 		MOV	AX, 4300H + ACTION
 		CMP	LFNAPI, 0FFFFH
