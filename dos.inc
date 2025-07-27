@@ -1214,6 +1214,16 @@ LFN_MAKE_DIR	MACRO	PATH
 		STC
 		@DosCall 7139H
 		ENDM
+		
+@VdmMkDir	MACRO	PATH
+		LDS	DX, PATH
+		MOV	AX, 03900H
+		CMP	LFNAPI, 0FFFFH
+		JNZ	@F
+		STC
+		MOV	AX, 07139H
+@@:		@DosCall AX
+		ENDM
 
 ;-----------------------------------------------------------------------------
 ; REM_DIR - Remove directory (3Ah)
