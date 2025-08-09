@@ -438,15 +438,26 @@ RESET_DISK	MACRO
 ; Input: DISK - Drive number
 ;
 ; RBIL: INT 21h/AX=710Dh - LONG FILENAME DISK RESET (DOS 7+)
-;   CX=0002h: Reset all drives. DX=drive (0=default, 1=A, etc.)
+;   CX=0002h: ???. DX=drive (0=default, 1=A, etc.)
 ;   Reference: http://osfree.org/doku/en:docs:macrolib:lfn_reset_disk
 ;-----------------------------------------------------------------------------
 LFN_RESET_DISK	MACRO	DISK
-		MOV	AX, 710DH
 		MOV	CX, 2
 		MOV	DX, DISK
-		INT	21H
+		@DosCall 710DH
 		ENDM
+
+@VdmResetDisk	MACRO
+		MOV	AX, 0D00H
+		CMP	LFNAPI, 0FFFFH
+		JNZ	@F
+		STC
+		MOV	AX, 07139H
+		MOV	CX, 1
+		MOV	DX, 0
+@@:		@DosCall AX
+		ENDM
+
 
 ;-----------------------------------------------------------------------------
 ; SELECT_DISK - Set default drive (0Eh)
