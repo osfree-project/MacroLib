@@ -438,7 +438,7 @@ RESET_DISK	MACRO
 ; Input: DISK - Drive number
 ;
 ; RBIL: INT 21h/AX=710Dh - LONG FILENAME DISK RESET (DOS 7+)
-;   CX=0002h: ???. DX=drive (0=default, 1=A, etc.)
+;   CX=0002h: Reset all drives. DX=drive (0=default, 1=A, etc.)
 ;   Reference: http://osfree.org/doku/en:docs:macrolib:lfn_reset_disk
 ;-----------------------------------------------------------------------------
 LFN_RESET_DISK	MACRO	DISK
