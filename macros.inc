@@ -119,7 +119,7 @@ ENDM
     IF  @Cpu AND 00000010B		;; 80186 or higher
       push op
     ELSE			    	;; 8088/8086
-      IF (OPATTR (adr)) AND 00000100B	;; Constant
+      IF (OPATTR (op)) AND 00000100B	;; Constant
         mov  ax, op
         push ax
       ELSE
